@@ -1,2 +1,2 @@
-# Kyle-Kinsella-4th-Year-Project---Discord-Clone
-Throughout the building process of this project I will be writing my own code and documentation for some of the most used features in the discord app.
+# Kyle-Kinsella-4th-Year-Project---Kyle Connect
+Throughout the building process of Kyle Connect I will be writing my code and documentation with regular commits to this repository.
