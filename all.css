@@ -1,0 +1,19 @@
+@media (max-width: 600px) {
+    .cotainer {
+        flex-direction: column;
+    }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+    .cotainer {
+        flex-direction: row;
+    }
+}
+
+
+@media (min-width: 901px) {
+    .cotainer {
+        justify-content: space-around;
+    }
+}
+
