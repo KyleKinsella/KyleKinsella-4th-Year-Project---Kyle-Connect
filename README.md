@@ -5,3 +5,5 @@ Click on this link to use my website: https://9752452e.kylekinsella-4th-year-pro
 
 
 link: https://2af7fb19.kylekinsella-4th-year-project---kyle-connect.pages.dev/
+
+new diffrent link: https://51f335bc.kylekinsella-4th-year-project---kyle-connect.pages.dev
