@@ -2,6 +2,48 @@ from flask import Flask, render_template, request
 import DBcm
 import mysql.connector
 
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from cryptography.fernet import Fernet
+
+
+def encryptPassword(password):
+    s = password
+    key = Fernet.generate_key()
+    fernet = Fernet(key)
+    encrypt = fernet.encrypt(s.encode())
+
+    return encrypt
+
+
+
+def send(recipientEmail, subject, body): 
+    message = MIMEMultipart()
+    message['from'] = sendedEmail
+    message['to'] = recipientEmail
+    message["subject"] = subject
+    message.attach(MIMEText(body, 'plain'))
+
+    try:
+        # Set up the SMTP server
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()  # Upgrade the connection to secure
+            server.login(sendedEmail, sender_password)  # Login to your email account
+            server.send_message(message)  # Send the email
+        print("Email sent successfully")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+# Email credentials
+sendedEmail = 'kylekinsella10@gmail.com'
+sender_password = 'xocq rwwb zqzd ipga'  # Use an app password or environment variable for security
+
+# SMTP server configuration
+smtp_server = 'smtp.gmail.com'
+smtp_port = 587  # Use 587 for TLS
+
+
 config = {
     "user": "root",
     "password": "",
@@ -26,21 +68,33 @@ def home():
 
 @app.route('/submit', methods=['POST'])
 def submitForm():
-    print(request.form)  # Debugging step
+    # print(request.form)  # Debugging step
     
     name = request.form.get('name')
     email = request.form.get('email')
     password = request.form.get('password')
 
-    data = (name, email, password)
+    # print("password is: ", password)
 
-    print(f"name: {name}, email: {email}, password: {password}")
+    # hiddenPassword = encryptPassword(password)
+    # print("hidden password is: ", hiddenPassword)
+
+    password = encryptPassword(password)
+
+    data = (name, email, password)
 
     with DBcm.UseDatabase(config) as db:
         db.execute(INSERT, data)
 
 
-    return f"form submitted! name: {name}, email: {email}, password: {password}"
+    recipient_email = email
+    subject = "Welcome"
+    body = "Hi " + name + ",\n" + "Welcome to Kyle Connect."
+    send(recipient_email, subject, body)
+
+    return f"Your account has been created {name}. Please check your email {name}."
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True)
+
+  
