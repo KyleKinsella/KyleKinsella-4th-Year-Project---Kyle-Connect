@@ -3,21 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create an Account</title>
-    <link rel="stylesheet" href="makeAccount.css">
-    <!-- <script src="app.js"></script> -->
+    <title>Login</title>
 </head>
 <body>
-    
-    <h1>Let's start off with making an account for you</h1>
+
+
+    <h3>Login</h3>
+
 
     <div id="account">
-        <form action="/submit" method="POST">        
-            <div id="name">
-                <label for="name">Name</label>
-                <input name="name" type="text" placeholder="Enter your name" required>
-            </div>
-         
+        <form action="/login" method="POST">        
             <div id="email">
                 <label for="email">Email</label>
                 <input name="email" type="email" placeholder="Enter your email" required>    
@@ -27,9 +22,11 @@
                 <label for="password">Password</label>
                 <input name="password" type="password" placeholder="Enter a password" required>     
             </div>
-            <button type="submit">Submit</button>
+
+            <button type="login">Login</button>
             <button type="reset">Clear form</button>
         </form>
     </div>
+    
 </body>
 </html>

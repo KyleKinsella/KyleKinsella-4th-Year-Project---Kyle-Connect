@@ -7,6 +7,21 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from cryptography.fernet import Fernet
 
+config = {
+    "user": "root",
+    "password": "",
+    "database": "users",
+    "host": "localhost"
+}
+
+
+connection = mysql.connector.connect(
+    user = "root",
+    password = "",
+    database = "users",
+    host = "localhost"
+)
+
 
 def encryptPassword(password):
     s = password
@@ -35,6 +50,7 @@ def send(recipientEmail, subject, body):
     except Exception as e:
         print(f"Failed to send email: {e}")
 
+
 # Email credentials
 sendedEmail = 'kylekinsella10@gmail.com'
 sender_password = 'xocq rwwb zqzd ipga'  # Use an app password or environment variable for security
@@ -42,14 +58,6 @@ sender_password = 'xocq rwwb zqzd ipga'  # Use an app password or environment va
 # SMTP server configuration
 smtp_server = 'smtp.gmail.com'
 smtp_port = 587  # Use 587 for TLS
-
-
-config = {
-    "user": "root",
-    "password": "",
-    "database": "users",
-    "host": "localhost"
-}
 
 
 INSERT = """
@@ -61,24 +69,30 @@ INSERT = """
 
 app = Flask(__name__)
 
+
+
 @app.route('/')
 def home():
+    return render_template('index.html')
+
+
+@app.route('/home')
+def makeAccount():
     return render_template('makeAccount.html')
+
+
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
 
 
 @app.route('/submit', methods=['POST'])
 def submitForm():
-    # print(request.form)  # Debugging step
-    
     name = request.form.get('name')
     email = request.form.get('email')
     password = request.form.get('password')
-
-    # print("password is: ", password)
-
-    # hiddenPassword = encryptPassword(password)
-    # print("hidden password is: ", hiddenPassword)
-
     password = encryptPassword(password)
 
     data = (name, email, password)
@@ -94,7 +108,6 @@ def submitForm():
 
     return f"Your account has been created {name}. Please check your email {name}."
 
+
 if __name__ == '__main__':
     app.run(debug=True)
-
-  
