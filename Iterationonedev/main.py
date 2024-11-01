@@ -7,20 +7,25 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from cryptography.fernet import Fernet
 
-config = {
-    "user": "root",
-    "password": "",
-    "database": "users",
-    "host": "localhost"
-}
+import sqlite3
 
 
-connection = mysql.connector.connect(
+def loginUser():
+    connection = mysql.connector.connect(
     user = "root",
     password = "",
     database = "users",
     host = "localhost"
-)
+    )
+
+
+    cursor = connection.cursor()
+    cursor.execute("SELECT username FROM communicators")
+    result = cursor.fetchall()
+
+    for row in result:
+        print(row)
+
 
 
 def encryptPassword(password):
@@ -84,6 +89,7 @@ def makeAccount():
 
 @app.route('/login')
 def login():
+    loginUser()
     return render_template('login.html')
 
 
