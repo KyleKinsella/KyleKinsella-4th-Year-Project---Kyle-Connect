@@ -4,15 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='login.css') }}">
 </head>
 <body>
 
 
-    <h3>Login</h3>
+    <h1>Login</h1>
 
 
     <div id="account">
-        <form action="/login" method="POST">        
+        <form action="/submit" method="POST">        
             <div id="email">
                 <label for="email">Email</label>
                 <input name="email" type="email" placeholder="Enter your email" required>    
@@ -23,7 +24,7 @@
                 <input name="password" type="password" placeholder="Enter a password" required>     
             </div>
 
-            <button type="login">Login</button>
+            <button type="submit">Login</button>
             <button type="reset">Clear form</button>
         </form>
     </div>
