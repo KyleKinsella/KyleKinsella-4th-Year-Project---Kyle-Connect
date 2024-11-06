@@ -1,21 +1,3 @@
-// package main
-
-// import (
-// 	"net/http"
-// 	"io"
-// )
-
-// func index(w http.ResponseWriter, r *http.Request) {
-// 	io.WriteString(w, "hello world!")
-// }
-
-// func main() {
-
-// 	http.HandleFunc("/", index)
-// 	http.ListenAndServe(":8080", nil)
-
-// }
-
 package main
 
 import (
@@ -25,10 +7,32 @@ import (
 	"log"
 	"net/http"
 	"testing/utils"
+
+    "math/rand"
+
+    // below are imports for the encryption & decryption 
+    "crypto/md5"
+    "encoding/hex"
 )
 
-// Template for the HTML form
-var formTemplate = `
+func mdHashing(input string) string {
+    byteInput := []byte(input)
+    md5Hash := md5.Sum(byteInput)
+    return hex.EncodeToString(md5Hash[:]) // EncodeToString returns the hexadecimal encoding of src.
+}
+
+func jumbleUpHash(chars string, lenght int32) string {
+    bytes := make([]byte, lenght)
+    rand.Read(bytes)
+
+    for index, ele := range bytes {
+        random := ele%byte(len(chars))
+        bytes[index] = chars[random]
+    }
+    return string(bytes)
+}
+
+var account = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -50,17 +54,13 @@ var formTemplate = `
     </form>
 
     {{if .Username}}
-    <h2>Form Data Received:</h2>
-    <p>Name: {{.Username}}</p>
-    <p>Email: {{.Email}}</p>
-	<p>Password: {{.Password}}</p>
+    <p>Your account has been made {{.Username}}.</p>
     {{end}}
 </body>
 </html>
 `
 
-
-type FormData struct {
+type User struct {
     Username  string
     Email string
 	Password string
@@ -69,15 +69,13 @@ type FormData struct {
 // Handler function to serve the form and process submissions
 func formHandler(w http.ResponseWriter, r *http.Request) {
     // Parse the HTML template
-    tmpl, err := template.New("form").Parse(formTemplate)
+    tmpl, err := template.New("form").Parse(account)
     if err != nil {
         log.Fatal(err)
     }
-
     // Initialize form data
-    formData := FormData{}
+    userData := User{}
 
-    // Check if the request method is POST (form submission)
     if r.Method == http.MethodPost {
         // Parse form data
         err := r.ParseForm()
@@ -86,21 +84,23 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             return
         }
 
-        // Retrieve values from the form
-        formData.Username = r.FormValue("name")
-        formData.Email = r.FormValue("email")
-		formData.Password = r.FormValue("password")
+        userData.Username = r.FormValue("name")
+        userData.Email = r.FormValue("email")
+		userData.Password = r.FormValue("password")
+        passwordHashed := mdHashing(userData.Password)
+        mixedUpPassword := jumbleUpHash(passwordHashed, 26)
 
-		fmt.Println(formData.Username, formData.Email, formData.Password)
-
+        // fmt.Println("password hashed is:", passwordHashed)
+        // fmt.Println("jumpled up password is:", mixedUpPassword)
+        
         db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/users")
         utils.CatchError(err)
 
-        utils.PutDataToDb(db, formData.Username, formData.Email, formData.Password)
+        utils.PutDataToDb(db, userData.Username, userData.Email, mixedUpPassword)
     }
 
     // Render the HTML template with the form data
-    tmpl.Execute(w, formData)
+    tmpl.Execute(w, userData)
 }
 
 func main() {

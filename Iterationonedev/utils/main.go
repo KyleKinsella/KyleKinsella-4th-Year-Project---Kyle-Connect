@@ -22,14 +22,11 @@ func retrieveInfo() {
 
 
 func PutDataToDb(db *sql.DB, username, email, password string) error {
-
 	sql := "INSERT INTO communicators (username, email, password) VALUES (?, ?, ?)"
-
 	_, err := db.Query(sql, username, email, password)
 	CatchError(err)
 
-	fmt.Println("user inserted into database")
-
+	fmt.Println(username, " inserted into database.")
 	return err
 }
 
