@@ -1,4 +1,4 @@
-package main
+package makeAccount
 
 import (
 	"database/sql"
@@ -7,21 +7,19 @@ import (
 	"log"
 	"net/http"
 	"testing/utils"
-
-    "math/rand"
-
-    // below are imports for the encryption & decryption 
+    // below are imports for the encryption 
     "crypto/md5"
     "encoding/hex"
+    "math/rand"
 )
 
-func mdHashing(input string) string {
+func MdHashing(input string) string {
     byteInput := []byte(input)
     md5Hash := md5.Sum(byteInput)
     return hex.EncodeToString(md5Hash[:]) // EncodeToString returns the hexadecimal encoding of src.
 }
 
-func jumbleUpHash(chars string, lenght int32) string {
+func JumbleUpHash(chars string, lenght int32) string {
     bytes := make([]byte, lenght)
     rand.Read(bytes)
 
@@ -84,18 +82,17 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             return
         }
 
+        // get the data from the html form
         userData.Username = r.FormValue("name")
         userData.Email = r.FormValue("email")
-		userData.Password = r.FormValue("password")
-        passwordHashed := mdHashing(userData.Password)
-        mixedUpPassword := jumbleUpHash(passwordHashed, 26)
+		userData.Password = r.FormValue("password")    
+        // hash the password
+        passwordHashed := MdHashing(userData.Password)
+        // jumble up the encrypted password
+        mixedUpPassword := JumbleUpHash(passwordHashed, 26)
 
-        // fmt.Println("password hashed is:", passwordHashed)
-        // fmt.Println("jumpled up password is:", mixedUpPassword)
-        
         db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/users")
         utils.CatchError(err)
-
         utils.PutDataToDb(db, userData.Username, userData.Email, mixedUpPassword)
     }
 
@@ -103,10 +100,9 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
     tmpl.Execute(w, userData)
 }
 
-func main() {
-    // Set up the route and handler for the form
+func RunServer() {
+     // Set up the route and handler for the form
     http.HandleFunc("/", formHandler)
-
     // Start the HTTP server
     fmt.Println("Server started at http://localhost:8080")
     log.Fatal(http.ListenAndServe(":8080", nil))
