@@ -1,12 +1,13 @@
 package main
 
 import (
-	// "database/sql"
+    "database/sql"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
-	// "testing/utils"
+	"testing/makeAccount"
+    "testing/utils"
 )
 
 var account = `
@@ -59,24 +60,28 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         userData.Email = r.FormValue("email")
 		userData.Password = r.FormValue("password")
-        fmt.Println("email:", userData.Email, "password:", userData.Password)
+        fmt.Println(userData.Email, userData.Password)
 
-        // passwordHashed := mdHashing(userData.Password)
-        // mixedUpPassword := jumbleUpHash(passwordHashed, 26)
+        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
+        utils.CatchError(err)
+        defer db.Close()
 
+        hashedPassword, err := utils.RetrieveDataFromDb(db, userData.Email)  
+        if err != nil {
+            if err == sql.ErrNoRows {
+                fmt.Println("Email is not in database!")
+            } else {
+                fmt.Println("Error retrieving password from database:", err)
+            }
+            return
+        }
 
-
-        // fmt.Println("password hashed is:", passwordHashed)
-        // fmt.Println("jumpled up password is:", mixedUpPassword)
-        
-        
-        
-        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/users")
-        // utils.CatchError(err)
-
-        // utils.PutDataToDb(db, userData.Username, userData.Email, mixedUpPassword)
+        if makeAccount.CheckPassword(userData.Password, hashedPassword) {
+            fmt.Println("You have logged into your account !!!!!!!!!!!!")
+        } else {
+            fmt.Println("Incorrect Email or Password!.......///////^^^^^^^^^^^")
+        }
     }
-
     // Render the HTML template with the form data
     tmpl.Execute(w, userData)
 }

@@ -7,27 +7,22 @@ import (
 	"log"
 	"net/http"
 	"testing/utils"
-    // below are imports for the encryption 
-    "crypto/md5"
-    "encoding/hex"
-    "math/rand"
+
+	// below are imports for the encryption
+	"golang.org/x/crypto/bcrypt"
 )
 
-func MdHashing(input string) string {
-    byteInput := []byte(input)
-    md5Hash := md5.Sum(byteInput)
-    return hex.EncodeToString(md5Hash[:]) // EncodeToString returns the hexadecimal encoding of src.
+func HashingPassword(input string) (string, error) {
+    hash, err := bcrypt.GenerateFromPassword([]byte(input), bcrypt.DefaultCost)
+    if err != nil {
+        return "", err
+    }
+    return string(hash), nil
 }
 
-func JumbleUpHash(chars string, lenght int32) string {
-    bytes := make([]byte, lenght)
-    rand.Read(bytes)
-
-    for index, ele := range bytes {
-        random := ele%byte(len(chars))
-        bytes[index] = chars[random]
-    }
-    return string(bytes)
+func CheckPassword(password, hash string) bool {
+    err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+    return err == nil
 }
 
 var account = `
@@ -87,15 +82,16 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         userData.Email = r.FormValue("email")
 		userData.Password = r.FormValue("password")    
         // hash the password
-        passwordHashed := MdHashing(userData.Password)
-        // jumble up the encrypted password
-        mixedUpPassword := JumbleUpHash(passwordHashed, 26)
+        passwordHashed, err := HashingPassword(userData.Password)
+        if err != nil {
+            fmt.Println("an error has occured!")
+            return 
+        }
 
-        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/users")
+        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
         utils.CatchError(err)
-        utils.PutDataToDb(db, userData.Username, userData.Email, mixedUpPassword)
+        utils.PutDataToDb(db, userData.Username, userData.Email, passwordHashed)
     }
-
     // Render the HTML template with the form data
     tmpl.Execute(w, userData)
 }

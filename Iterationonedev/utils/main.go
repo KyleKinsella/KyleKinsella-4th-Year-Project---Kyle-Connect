@@ -3,7 +3,7 @@ package utils
 import (
 	"database/sql"
 	"fmt"
-
+	"errors"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -14,18 +14,15 @@ func CatchError(err error) error {
 	return err
 }
 
-func RetrieveDataFromDb(db *sql.DB, email, password string) []string {
-	sql := "SELECT email, password FROM communicators WHERE email=? AND password=?"
-	_, err := db.Query(sql, email, password)
-	CatchError(err)
-	
-	totalData := []string{email, password}
-
-	for _, i := range totalData {
-		fmt.Println("here is some data retrieved from the database\n", i)
-	}
-
-	return totalData
+func RetrieveDataFromDb(db *sql.DB, email string) (string, error) {
+    var hashedPassword string
+    err := db.QueryRow("SELECT password FROM communicators WHERE email = ?", email).Scan(&hashedPassword)
+    if err == sql.ErrNoRows {
+        return "", errors.New("no user with that email")
+    } else if err != nil {
+        return "", err
+    }
+    return hashedPassword, nil
 }
 
 func PutDataToDb(db *sql.DB, username, email, password string) error {
