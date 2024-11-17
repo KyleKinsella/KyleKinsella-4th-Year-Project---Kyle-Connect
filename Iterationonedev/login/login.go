@@ -1,13 +1,14 @@
 package main
 
 import (
-    "database/sql"
+	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"testing/makeAccount"
-    "testing/utils"
+	"testing/ui"
+	"testing/utils"
 )
 
 var account = `
@@ -27,10 +28,6 @@ var account = `
 
         <input type="submit" value="Login">
     </form>
-
-    {{if .Username}}
-    <p>You have successfully logged into your account {{.Username}}.</p>
-    {{end}}
 </body>
 </html>
 `
@@ -38,6 +35,7 @@ var account = `
 type User struct {
     Email string
 	Password string
+    UI template.HTML
 }
 
 // Handler function to serve the form and process submissions
@@ -60,7 +58,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         userData.Email = r.FormValue("email")
 		userData.Password = r.FormValue("password")
-        fmt.Println(userData.Email, userData.Password)
 
         db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
         utils.CatchError(err)
@@ -76,10 +73,35 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             return
         }
 
+        data := User {
+            Email: userData.Email,
+            UI: template.HTML(ui.UI),
+        }
+
         if makeAccount.CheckPassword(userData.Password, hashedPassword) {
-            fmt.Println("You have logged into your account !!!!!!!!!!!!")
+            fmt.Println("You have logged into your account.")
+            // Parse and execute the template
+            t, err := template.New(ui.UI).Parse(ui.UI)
+            if err != nil {
+                http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                return
+            }
+            if err := t.Execute(w, data); err != nil {
+                http.Error(w, "Template execution error", http.StatusInternalServerError)
+                return
+            }
+            return // stop the rendering of the login page
         } else {
-            fmt.Println("Incorrect Email or Password!.......///////^^^^^^^^^^^")
+            t, err := template.New(ui.UIERROR).Parse(ui.UIERROR) 
+            if err != nil {
+                http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                return
+            }
+            if err := t.Execute(w, data); err != nil {
+                http.Error(w, "Template execution error", http.StatusInternalServerError)
+                return
+            }
+            return 
         }
     }
     // Render the HTML template with the form data
