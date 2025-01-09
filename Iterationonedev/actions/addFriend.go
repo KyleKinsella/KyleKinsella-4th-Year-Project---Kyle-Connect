@@ -70,7 +70,11 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
 		if strings.TrimSpace(strings.ToLower(username)) == strings.TrimSpace(strings.ToLower(enteredUsername)) {			
 			fmt.Println("yesss", username)
+
+            utils.PutDataToFriendRequestTable(db, 1, "Kyle", 3, "Ethan", "sent")
+
 			// here i need to make the friend request logic
+			// show a message to the user that the friend request has been sent 
 		} else {
 			fmt.Println("noooo", er)
 		}

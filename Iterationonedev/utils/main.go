@@ -25,6 +25,16 @@ func RetrieveDataFromDb(db *sql.DB, email string) (string, error) {
     return hashedPassword, nil
 }
 
+func RetrieveUsernameFromDb(db *sql.DB, username string) (string, error) {
+    err := db.QueryRow("SELECT username FROM communicators WHERE username = ?", username).Scan(&username)
+	if err == sql.ErrNoRows {
+        return "", errors.New("no user with that username found")
+    } else if err != nil {
+        return "", err
+    }
+    return username, nil
+}
+
 func PutDataToDb(db *sql.DB, username, email, password string) error {
 	sql := "INSERT INTO communicators (username, email, password) VALUES (?, ?, ?)"
 	_, err := db.Query(sql, username, email, password)
@@ -32,4 +42,14 @@ func PutDataToDb(db *sql.DB, username, email, password string) error {
 
 	fmt.Println(username, "inserted into database.")
 	return err
+}
+
+
+func PutDataToFriendRequestTable(db *sql.DB, fromUserId int, fromUserName string, toUserId int, toUserName string, status string) error {
+	sql := "INSERT INTO friendrequest (fromUserId, fromUserName, toUserId, toUserName, status) VALUES (?, ?, ?, ?, ?)" 
+	_, err := db.Query(sql, fromUserId, fromUserName, toUserId, toUserName, status);	
+	CatchError(err);
+
+	fmt.Println(fromUserName, " has sent a friend request, your data has been inserted into the friendRequest table")
+	return err;
 }
