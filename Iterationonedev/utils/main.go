@@ -50,6 +50,16 @@ func PutDataToFriendRequestTable(db *sql.DB, fromUserId int, fromUserName string
 	_, err := db.Query(sql, fromUserId, fromUserName, toUserId, toUserName, status);	
 	CatchError(err);
 
-	fmt.Println(fromUserName, " has sent a friend request, your data has been inserted into the friendRequest table")
+	fmt.Println(fromUserName, "has sent a friend request to", toUserName)
 	return err;
+}
+
+func GetUserId(db *sql.DB, username string) (string, error) {
+	getUserid := db.QueryRow("SELECT userId FROM communicators WHERE username = ?", username).Scan(&username)
+	if getUserid == sql.ErrNoRows {
+		return "", errors.New("no userid found for that username")
+	} else if getUserid != nil {
+		return "", getUserid
+	} 
+	return username, nil
 }

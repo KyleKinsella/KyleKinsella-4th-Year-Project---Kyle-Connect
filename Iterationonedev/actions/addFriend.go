@@ -1,12 +1,13 @@
 package main
 
 import (
-	"html/template"
-	"strings"
 	"database/sql"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"testing/utils"
 )
 
@@ -32,6 +33,14 @@ var addFriend = `
 type User struct {
     Username string
 	UI template.HTML
+}
+
+func convertStringToInt(number string) int {
+    i, err := strconv.Atoi(number)
+    if err != nil {
+        panic(err)
+    }
+    return i
 }
 
 // Handler function to serve the form and process submissions
@@ -66,12 +75,29 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 		if er != nil {
 			log.Fatal("error retrieving username from database", er)
 		}
-		fmt.Println("here is the inputed username retrieved from the database", username, "test", userData.Username)
 
-		if strings.TrimSpace(strings.ToLower(username)) == strings.TrimSpace(strings.ToLower(enteredUsername)) {			
-			fmt.Println("yesss", username)
+        // this should get a userid for a given inputted username
+        id, err := utils.GetUserId(db, username)
 
-            utils.PutDataToFriendRequestTable(db, 1, "Kyle", 3, "Ethan", "sent")
+        // convert the id variable above from a string to an int 
+        idConverted := convertStringToInt(id)
+        if err != nil {
+            fmt.Println("error finding userid for", id)
+        } 
+
+        kylesId, err := utils.GetUserId(db, "Kyle")
+        kylesIdConverted := convertStringToInt(kylesId)
+        if err != nil {
+            fmt.Println("error finding userid for", kylesId)
+        } 
+
+        status := "sent"
+      
+        
+		if strings.TrimSpace(strings.ToLower(username)) == strings.TrimSpace(strings.ToLower(enteredUsername)) {
+            			
+            // below I put the values for the friend request into a friend request table 
+            utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status)
 
 			// here i need to make the friend request logic
 			// show a message to the user that the friend request has been sent 
