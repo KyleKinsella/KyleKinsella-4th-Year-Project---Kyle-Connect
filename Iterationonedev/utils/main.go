@@ -63,3 +63,13 @@ func GetUserId(db *sql.DB, username string) (string, error) {
 	} 
 	return username, nil
 }
+
+func UpdateFriendRequestStatus(db *sql.DB, status string, name string) string {
+	sql := "UPDATE friendrequest SET status = ? Where toUserName = ?;"
+
+	_, err := db.Query(sql, status, name)
+	CatchError(err)
+
+	fmt.Println(name, "has been updated from pending to accept")
+	return name
+}

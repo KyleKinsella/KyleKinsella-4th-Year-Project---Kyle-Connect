@@ -41,7 +41,7 @@ type User struct {
 
 func question(fromUser string) string {
     var value string
-    fmt.Print("Do you accept or decline this friend request from ", fromUser, "?")
+    fmt.Print("Do you accept or decline this friend request from ", fromUser, "?\n")
     fmt.Scan(&value)
     return value
 }
@@ -89,7 +89,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         // this should get a userid for a given inputted username
         id, err := utils.GetUserId(db, username)
-        fmt.Println("the output of id is", id)
+        // fmt.Println("the output of id is", id)
 
         // convert the id variable above from a string to an int 
         idConverted := convertStringToInt(id)
@@ -129,15 +129,18 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status)
 
             if status == "pending" {
-                fmt.Println("yes status is:", status)
+                // fmt.Println("yes status is:", status)
 
                 answerFromUser := question("Kyle")
-                fmt.Println("answer is:", answerFromUser)
+                // fmt.Println("answer is:", answerFromUser)
 
                 if answerFromUser == "yes" || answerFromUser == "y" || answerFromUser == "accept" {
                     status = "accept"
                     // i might have to make / change the below query to update instead of making a new insertion
-                    utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status)
+                    // utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status)
+
+                    utils.UpdateFriendRequestStatus(db, status, username)
+                    // fmt.Println("the output of the test variable is:", test)
                 } 
 
                 if answerFromUser == "no" || answerFromUser == "n" || answerFromUser == "decline" {
