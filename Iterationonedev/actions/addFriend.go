@@ -26,6 +26,10 @@ var addFriend = `
 
         <input type="submit" value="Send friend request">
     </form>
+
+    {{if .Username}}
+    <p>Your friend request has been sent to {{.Username}}!</p>
+    {{end}}
 </body>
 </html>
 `
@@ -33,6 +37,13 @@ var addFriend = `
 type User struct {
     Username string
 	UI template.HTML
+}
+
+func question(fromUser string) string {
+    var value string
+    fmt.Print("Do you accept or decline this friend request from ", fromUser, "?")
+    fmt.Scan(&value)
+    return value
 }
 
 func convertStringToInt(number string) int {
@@ -78,6 +89,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         // this should get a userid for a given inputted username
         id, err := utils.GetUserId(db, username)
+        fmt.Println("the output of id is", id)
 
         // convert the id variable above from a string to an int 
         idConverted := convertStringToInt(id)
@@ -85,19 +97,61 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             fmt.Println("error finding userid for", id)
         } 
 
-        kylesId, err := utils.GetUserId(db, "Kyle")
+        kylesId, err := utils.GetUserId(db, "Kyle") // need to change this in the future but keeping it like this for NOW!
         kylesIdConverted := convertStringToInt(kylesId)
         if err != nil {
             fmt.Println("error finding userid for", kylesId)
         } 
 
-        status := "sent"
-      
+        status := "pending"
+        // when we send this data to the table it is "sent"!
+        // so this means that we can print friend request sent or something like that
         
+        // status should be "pending" 
+        // query the db / table
+        // if we have any pending values we can either accept them or not
+        // if we accept the friend request then I, add my friend to a new db / table called "friends"
+        // if I say decline then I, delete that friend out of the table  
+
+        // statusArr := []string{"pending", "accepted", "declined"}
+
+
+        // username = kyle 
+        // enteredusename = joe
+        // if username != enteredUsername {
+        //     fmt.Println("username is not equal to entered username!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        //     fmt.Println(enteredUsername, "sent a request to ", username)
+        // }
+
 		if strings.TrimSpace(strings.ToLower(username)) == strings.TrimSpace(strings.ToLower(enteredUsername)) {
-            			
+
             // below I put the values for the friend request into a friend request table 
             utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status)
+
+            if status == "pending" {
+                fmt.Println("yes status is:", status)
+
+                answerFromUser := question("Kyle")
+                fmt.Println("answer is:", answerFromUser)
+
+                if answerFromUser == "yes" || answerFromUser == "y" || answerFromUser == "accept" {
+                    status = "accept"
+                    // i might have to make / change the below query to update instead of making a new insertion
+                    utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status)
+                } 
+
+                if answerFromUser == "no" || answerFromUser == "n" || answerFromUser == "decline" {
+                    status = "decline"
+                    // i might have to make / change the below query to update instead of making a new insertion
+                    // dont do the below query, I need to delete this request from the friend request table due to me not wanting to 
+                    // accept the friend request from x user
+
+                    utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status) //  <= DON'T DO! 
+                    fmt.Println("you have declined the friend request, this has been removed from the friend request table!")
+                }
+            } else {
+                fmt.Println("no status is:", status)
+            }
 
 			// here i need to make the friend request logic
 			// show a message to the user that the friend request has been sent 
