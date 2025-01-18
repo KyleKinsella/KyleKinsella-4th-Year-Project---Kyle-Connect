@@ -9,13 +9,14 @@ import (
 	"strconv"
 	"strings"
 	"testing/utils"
+    "time"
 )
 
 var addFriend = `
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Kyle Connect - Add a friend</title>
+    <title>Kyle Connect - Add a friend / Send Friend Request</title>
 </head>
 <body>
     <h1>Add a friend</h1>
@@ -24,11 +25,17 @@ var addFriend = `
         <label for="username">Username:</label>
         <input type="username" id="username" name="username" placeholder="Enter username to add" required><br><br>
 
+        <h1>Accept or Decline Friend Request</h1>
+        <p>Enter accept or decline for your answer</p>
+        <label for="answer">Answer:</label>
+        <input type="answer" id="answer" name="answer" placeholder="Enter your answer" required><br><br>
+
         <input type="submit" value="Send friend request">
     </form>
 
     {{if .Username}}
     <p>Your friend request has been sent to {{.Username}}!</p>
+    <p>Your answer is: {{.Answer}}!</p>
     {{end}}
 </body>
 </html>
@@ -36,14 +43,8 @@ var addFriend = `
 
 type User struct {
     Username string
+    Answer string
 	UI template.HTML
-}
-
-func question(fromUser string) string {
-    var value string
-    fmt.Print("Do you accept or decline this friend request from ", fromUser, "?\n")
-    fmt.Scan(&value)
-    return value
 }
 
 func convertStringToInt(number string) int {
@@ -61,6 +62,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         log.Fatal(err)
     }
+
     // Initialize form data
     userData := User{}
 
@@ -75,14 +77,18 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         userData.Username = r.FormValue("username")
 		enteredUsername := userData.Username
 
+        userData.Answer = r.FormValue("answer")
+        ans := strings.TrimSpace(strings.ToLower(userData.Answer))
+
         db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
         // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
 		username, er := utils.RetrieveUsernameFromDb(db, enteredUsername)
 		if err != nil {
+            fmt.Println("this is what is driving me insane...................")
 			log.Fatal(er)
 		}
-		
+    
 		if er != nil {
 			log.Fatal("error retrieving username from database", er)
 		}
@@ -105,26 +111,26 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         status := "pending"
         // if we have any pending values we can either accept them or not
         // if we accept the friend request then I, add my friend to a new db / table called "friends" --- done
-        // if I say decline then I, delete that friend out of the table --- done  
-
+        // if I say decline then I, delete that friend out of the table --- done 
+        
 		if strings.TrimSpace(strings.ToLower(username)) == strings.TrimSpace(strings.ToLower(enteredUsername)) {
 
             // below I put the values for the friend request into a friend request table 
             utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status)
+            time.Sleep(time.Second*5)
 
             if status == "pending" {
 
-                answerFromUser := question("Kyle")
-                
-                if answerFromUser == "accept" {
+                if ans == "accept" {
                     status = "accept"
                     utils.UpdateFriendRequestStatus(db, status, username)
-
+                    
                     // here I put user1 and user2 into the friends table
                     utils.PutFriendsToFriendsTable(db, "Kyle", username) // need to fix the hard-coded Kyle!
                 } 
-
-                if answerFromUser == "decline" {
+    
+                if ans == "decline" {
+                    time.Sleep(time.Second*5)
                     status = "decline"
                     utils.DeclineFriendRequest(db, username)
                 }
