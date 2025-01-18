@@ -73,3 +73,13 @@ func UpdateFriendRequestStatus(db *sql.DB, status string, name string) string {
 	fmt.Println(name, "has been updated from pending to accept")
 	return name
 }
+
+func DeclineFriendRequest(db *sql.DB, name string) string {
+	sql := "DELETE FROM friendrequest WHERE toUserName = ?"
+
+	_, err := db.Query(sql, name)
+	CatchError(err)
+
+	fmt.Println(name, "has been deleted out of the friend request table")
+	return name
+}

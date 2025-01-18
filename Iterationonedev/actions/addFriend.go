@@ -149,8 +149,11 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                     // dont do the below query, I need to delete this request from the friend request table due to me not wanting to 
                     // accept the friend request from x user
 
-                    utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status) //  <= DON'T DO! 
-                    fmt.Println("you have declined the friend request, this has been removed from the friend request table!")
+                    // utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status) //  <= DON'T DO! 
+                    // fmt.Println("you have declined the friend request, this has been removed from the friend request table!")
+
+                    utils.DeclineFriendRequest(db, username)
+
                 }
             } else {
                 fmt.Println("no status is:", status)
