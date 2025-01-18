@@ -83,3 +83,14 @@ func DeclineFriendRequest(db *sql.DB, name string) string {
 	fmt.Println(name, "has been deleted out of the friend request table")
 	return name
 }
+
+func PutFriendsToFriendsTable(db *sql.DB, friend1 string, friend2 string) []string {
+	sql := "INSERT INTO friends (user1, user2) VALUES (?, ?)"
+
+	_, err := db.Query(sql, friend1,friend2)
+	CatchError(err)
+
+	fmt.Println(friend1, "and", friend2, "are in the friends table")
+	friends := []string{friend1, friend2}
+	return friends
+}

@@ -89,7 +89,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         // this should get a userid for a given inputted username
         id, err := utils.GetUserId(db, username)
-        // fmt.Println("the output of id is", id)
 
         // convert the id variable above from a string to an int 
         idConverted := convertStringToInt(id)
@@ -104,24 +103,9 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         } 
 
         status := "pending"
-        // when we send this data to the table it is "sent"!
-        // so this means that we can print friend request sent or something like that
-        
-        // status should be "pending" 
-        // query the db / table
         // if we have any pending values we can either accept them or not
-        // if we accept the friend request then I, add my friend to a new db / table called "friends"
-        // if I say decline then I, delete that friend out of the table  
-
-        // statusArr := []string{"pending", "accepted", "declined"}
-
-
-        // username = kyle 
-        // enteredusename = joe
-        // if username != enteredUsername {
-        //     fmt.Println("username is not equal to entered username!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        //     fmt.Println(enteredUsername, "sent a request to ", username)
-        // }
+        // if we accept the friend request then I, add my friend to a new db / table called "friends" --- done
+        // if I say decline then I, delete that friend out of the table --- done  
 
 		if strings.TrimSpace(strings.ToLower(username)) == strings.TrimSpace(strings.ToLower(enteredUsername)) {
 
@@ -129,42 +113,27 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status)
 
             if status == "pending" {
-                // fmt.Println("yes status is:", status)
 
                 answerFromUser := question("Kyle")
-                // fmt.Println("answer is:", answerFromUser)
-
-                if answerFromUser == "yes" || answerFromUser == "y" || answerFromUser == "accept" {
+                
+                if answerFromUser == "accept" {
                     status = "accept"
-                    // i might have to make / change the below query to update instead of making a new insertion
-                    // utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status)
-
                     utils.UpdateFriendRequestStatus(db, status, username)
-                    // fmt.Println("the output of the test variable is:", test)
+
+                    // here I put user1 and user2 into the friends table
+                    utils.PutFriendsToFriendsTable(db, "Kyle", username) // need to fix the hard-coded Kyle!
                 } 
 
-                if answerFromUser == "no" || answerFromUser == "n" || answerFromUser == "decline" {
+                if answerFromUser == "decline" {
                     status = "decline"
-                    // i might have to make / change the below query to update instead of making a new insertion
-                    // dont do the below query, I need to delete this request from the friend request table due to me not wanting to 
-                    // accept the friend request from x user
-
-                    // utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status) //  <= DON'T DO! 
-                    // fmt.Println("you have declined the friend request, this has been removed from the friend request table!")
-
                     utils.DeclineFriendRequest(db, username)
-
                 }
             } else {
                 fmt.Println("no status is:", status)
             }
-
-			// here i need to make the friend request logic
-			// show a message to the user that the friend request has been sent 
 		} else {
 			fmt.Println("noooo", er)
 		}
-
         utils.CatchError(err)
         defer db.Close()
     }
