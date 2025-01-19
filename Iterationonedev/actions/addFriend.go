@@ -55,6 +55,11 @@ func convertStringToInt(number string) int {
     return i
 }
 
+func convertIntToString(number int) string {
+	str := strconv.Itoa(number)
+    return str
+}
+
 // Handler function to serve the form and process submissions
 func formHandler(w http.ResponseWriter, r *http.Request) {
     // Parse the HTML template
@@ -80,8 +85,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         userData.Answer = r.FormValue("answer")
         ans := strings.TrimSpace(strings.ToLower(userData.Answer))
 
-        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
-        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
+        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
 		username, er := utils.RetrieveUsernameFromDb(db, enteredUsername)
 		if err != nil {
@@ -101,12 +106,34 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         if err != nil {
             fmt.Println("error finding userid for", id)
         } 
+        
+        // I have made the logged-in table 
+        // I have altered my login.go file to insert some data into this new table, but the name is hard-coded (so i need to write a query to get a username from an email)
+        // now the data is in the logged-in table, I now need to get that data
 
-        kylesId, err := utils.GetUserId(db, "Kyle") // need to change this in the future but keeping it like this for NOW!
-        kylesIdConverted := convertStringToInt(kylesId)
-        if err != nil {
-            fmt.Println("error finding userid for", kylesId)
-        } 
+        lastUser, e := utils.GetLastUserLoggedIn(db)
+        if e != nil {
+            fmt.Println("error getting last user in logged-in table", e)
+        }
+        utils.CatchError(e)
+        fmt.Println("value variable = ", lastUser) // value is 5 because that is the last element in the db table
+
+        lastUserFromIntToString := convertIntToString(lastUser)
+
+        emailId, e := utils.RetrieveEmailFromId(db, lastUserFromIntToString)
+        if e != nil {
+            fmt.Println("error getting email from id", e)
+        }
+        fmt.Println("emailId is:", emailId)
+        
+        loggedInUser, e := utils.RetrieveEmail(db, emailId)
+        if e != nil {
+            fmt.Println("error finding name for", username)
+        }
+        fmt.Println("loggedInUser is:", loggedInUser)
+
+        loggedInUserId, er := utils.GetUserId(db, loggedInUser)
+        convertedValue := convertStringToInt(loggedInUserId)
 
         status := "pending"
         // if we have any pending values we can either accept them or not
@@ -115,8 +142,13 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         
 		if strings.TrimSpace(strings.ToLower(username)) == strings.TrimSpace(strings.ToLower(enteredUsername)) {
 
+            if loggedInUser == username {
+                fmt.Println("you cannot send a friend reuqest to yourself!")
+                return
+            }
+
             // below I put the values for the friend request into a friend request table 
-            utils.PutDataToFriendRequestTable(db, kylesIdConverted, "Kyle", idConverted, username, status)
+            utils.PutDataToFriendRequestTable(db, convertedValue, loggedInUser, idConverted, username, status)
             time.Sleep(time.Second*5)
 
             if status == "pending" {
@@ -126,7 +158,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                     utils.UpdateFriendRequestStatus(db, status, username)
                     
                     // here I put user1 and user2 into the friends table
-                    utils.PutFriendsToFriendsTable(db, "Kyle", username) // need to fix the hard-coded Kyle!
+                    utils.PutFriendsToFriendsTable(db, loggedInUser, username) // need to fix the hard-coded Kyle!
                 } 
     
                 if ans == "decline" {
