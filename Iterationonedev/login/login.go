@@ -59,7 +59,9 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         userData.Email = r.FormValue("email")
 		userData.Password = r.FormValue("password")
 
-        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
+        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
+        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+
         utils.CatchError(err)
         defer db.Close()
 
@@ -80,6 +82,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         if makeAccount.CheckPassword(userData.Password, hashedPassword) {
             fmt.Println("You have logged into your account.")
+
             // Parse and execute the template
             t, err := template.New(ui.UI).Parse(ui.UI)
             if err != nil {
@@ -90,6 +93,13 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, "Template execution error", http.StatusInternalServerError)
                 return
             }
+
+            user, er := utils.RetrieveEmail(db, userData.Email)
+            if er != nil {
+                log.Fatal(er)
+            }
+            utils.InsertLoggedInUserToTable(db, user, userData.Email)
+
             return // stop the rendering of the login page
         } else {
             t, err := template.New(ui.UIERROR).Parse(ui.UIERROR) 
@@ -113,6 +123,6 @@ func main() {
     http.HandleFunc("/", formHandler)
 
     // Start the HTTP server
-    fmt.Println("Server started at http://localhost:8080")
-    log.Fatal(http.ListenAndServe(":8080", nil))
+    fmt.Println("Server started at http://localhost:8081")
+    log.Fatal(http.ListenAndServe(":8081", nil))
 }
