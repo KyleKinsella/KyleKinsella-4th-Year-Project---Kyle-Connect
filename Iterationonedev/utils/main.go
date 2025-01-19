@@ -2,8 +2,9 @@ package utils
 
 import (
 	"database/sql"
-	"fmt"
 	"errors"
+	"fmt"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -28,11 +29,11 @@ func RetrieveDataFromDb(db *sql.DB, email string) (string, error) {
 func RetrieveUsernameFromDb(db *sql.DB, username string) (string, error) {
     err := db.QueryRow("SELECT username FROM communicators WHERE username = ?", username).Scan(&username)
 	if err == sql.ErrNoRows {
-        return "", errors.New("no user with that username found")
+		return "", errors.New("\nTHIS HERE IS THE PROBLEM\nno user with that username found")
     } else if err != nil {
         return "", err
     }
-    return username, nil
+	return username, nil
 }
 
 func PutDataToDb(db *sql.DB, username, email, password string) error {
@@ -93,4 +94,55 @@ func PutFriendsToFriendsTable(db *sql.DB, friend1 string, friend2 string) []stri
 	fmt.Println(friend1, "and", friend2, "are in the friends table")
 	friends := []string{friend1, friend2}
 	return friends
+}
+
+func InsertLoggedInUserToTable(db *sql.DB, name, email string) (string, string) {
+	sql := "INSERT into loggedin (name, email) VALUES (?, ?)"
+
+	_, err := db.Query(sql, name, email)
+	CatchError(err)
+
+	fmt.Println(name, "and", email, "has been inserted into the logged in table")
+	return name, email
+}
+
+func RetrieveEmail(db *sql.DB, email string) (string, error) {
+	findEmail := db.QueryRow("SELECT username FROM communicators WHERE email = ?", email).Scan(&email)
+	if findEmail == sql.ErrNoRows {
+		return "", errors.New("no email found for that username")
+	} else if findEmail != nil {
+		return "", findEmail
+	} 
+	return email, nil
+}
+
+func RetrieveUsername(db *sql.DB, username string) (string, error) {
+	findUser := db.QueryRow("SELECT email FROM loggedin WHERE name = ?", username).Scan(&username)
+	if findUser == sql.ErrNoRows {
+		return "", errors.New("no username found for that email")
+	} else if findUser != nil {
+		return "", findUser
+	} 
+	return username, nil
+}
+
+func GetLastUserLoggedIn(db *sql.DB) (int, error) {
+	var id int
+	err := db.QueryRow("SELECT id FROM loggedin ORDER BY id DESC LIMIT 1").Scan(&id)
+	if err == sql.ErrNoRows {
+		return 0, errors.New("no users found")
+	} else if err != nil {
+		return 0, err
+	} 
+	return id, nil
+}
+
+func RetrieveEmailFromId(db *sql.DB, id string) (string, error) {
+	findEmail := db.QueryRow("SELECT email FROM loggedin WHERE id = ?", id).Scan(&id)
+	if findEmail == sql.ErrNoRows {
+		return "", errors.New("no email found for that username")
+	} else if findEmail != nil {
+		return "", findEmail
+	} 
+	return id, nil
 }
