@@ -59,8 +59,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         userData.Email = r.FormValue("email")
 		userData.Password = r.FormValue("password")
 
-        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
-        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
+        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
         utils.CatchError(err)
         defer db.Close()
@@ -84,7 +84,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             fmt.Println("You have logged into your account.")
 
             // Parse and execute the template
-            t, err := template.New(ui.UI).Parse(ui.UI)
+            t, err := template.New("UI").Parse(ui.UI)
             if err != nil {
                 http.Error(w, "Template parsing error", http.StatusInternalServerError)
                 return
@@ -94,12 +94,44 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 return
             }
 
+            // Prepare friendsHTML template
+            var friendsHTML = `
+            <div class="fri">
+                <h3 class="friends">Friends</h3>
+                <p>Below are all of your friends.</p>
+                <ul>
+                    {{range .}}
+                        <li>{{.}}</li>
+                    {{end}}
+                </ul>
+            </div>
+            `
+
+            // Parse the friendsHTML template
+            t, err = template.New("friendsList").Parse(friendsHTML)
+            if err != nil {
+                http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                return
+            }
+
             user, er := utils.RetrieveEmail(db, userData.Email)
             if er != nil {
                 log.Fatal(er)
             }
             utils.InsertLoggedInUserToTable(db, user, userData.Email)
 
+            friends := utils.GetFriends(db, user)
+            fmt.Println("below is a list of all of your friends", user, ":", friends)
+
+            for _, f := range friends {
+                fmt.Println(f)
+            }
+
+            if err := t.Execute(w, friends); err != nil {
+                http.Error(w, "Template execution error", http.StatusInternalServerError)
+                return
+            }
+        
             return // stop the rendering of the login page
         } else {
             t, err := template.New(ui.UIERROR).Parse(ui.UIERROR) 
