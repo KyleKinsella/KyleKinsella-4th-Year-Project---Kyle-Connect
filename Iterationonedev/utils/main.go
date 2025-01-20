@@ -146,3 +146,47 @@ func RetrieveEmailFromId(db *sql.DB, id string) (string, error) {
 	} 
 	return id, nil
 }
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func removeDuplicates(remove []string) []string {
+	list := []string{}
+
+	for _, item := range remove {
+		// fmt.Println(item)
+		if contains(list, item) == false {
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
+func GetFriends(db *sql.DB, name string) []string {
+	var friends []string
+
+	rows, err := db.Query("SELECT user2 FROM friends WHERE user1 = ?", name)
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var friend string 
+		if err := rows.Scan(&friend); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		friends = append(friends, friend)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	return removeDuplicates(friends)
+}
