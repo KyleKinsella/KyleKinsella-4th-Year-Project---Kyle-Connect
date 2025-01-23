@@ -190,3 +190,24 @@ func GetFriends(db *sql.DB, name string) []string {
 	}
 	return removeDuplicates(friends)
 }
+
+func GetPendingRequestsForLoggedInUser(db *sql.DB, loggedInUser, toUser, status string) (string, string, string, error) {
+	pending := db.QueryRow("SELECT status FROM friendrequest WHERE status = ?", status).Scan(&status)
+	if pending == sql.ErrNoRows {
+		fmt.Println("no status of pending:", status)
+		return "", "", "", errors.New("no username found with a status of pending")
+	} else if pending != nil {
+		return "", "", "", pending
+	} 
+	return loggedInUser, toUser, status, nil
+}
+
+func GetToUserName(db *sql.DB, username string) (string, error) {
+	findtoUserName := db.QueryRow("SELECT toUserName FROM friendrequest WHERE fromUserName = ?", username).Scan(&username)
+	if findtoUserName == sql.ErrNoRows {
+		return "", errors.New("no username found with a status of pending")
+	} else if findtoUserName != nil {
+		return "", findtoUserName
+	} 
+	return username, nil
+}

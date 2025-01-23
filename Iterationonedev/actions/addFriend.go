@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing/utils"
-    "time"
+    // "time"
 )
 
 var addFriend = `
@@ -25,17 +25,11 @@ var addFriend = `
         <label for="username">Username:</label>
         <input type="username" id="username" name="username" placeholder="Enter username to add" required><br><br>
 
-        <h1>Accept or Decline Friend Request</h1>
-        <p>Enter accept or decline for your answer</p>
-        <label for="answer">Answer:</label>
-        <input type="answer" id="answer" name="answer" placeholder="Enter your answer" required><br><br>
-
         <input type="submit" value="Send friend request">
     </form>
 
     {{if .Username}}
     <p>Your friend request has been sent to {{.Username}}!</p>
-    <p>Your answer is: {{.Answer}}!</p>
     {{end}}
 </body>
 </html>
@@ -82,11 +76,11 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         userData.Username = r.FormValue("username")
 		enteredUsername := userData.Username
 
-        userData.Answer = r.FormValue("answer")
-        ans := strings.TrimSpace(strings.ToLower(userData.Answer))
+        // userData.Answer = r.FormValue("answer")
+        // ans := strings.TrimSpace(strings.ToLower(userData.Answer))
 
-        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
-        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
+        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
 		username, er := utils.RetrieveUsernameFromDb(db, enteredUsername)
 		if err != nil {
@@ -149,26 +143,26 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             // below I put the values for the friend request into a friend request table 
             utils.PutDataToFriendRequestTable(db, convertedValue, loggedInUser, idConverted, username, status)
-            time.Sleep(time.Second*5)
+            // time.Sleep(time.Second*5)
 
-            if status == "pending" {
+            // if status == "pending" {
 
-                if ans == "accept" {
-                    status = "accept"
-                    utils.UpdateFriendRequestStatus(db, status, username)
+            //     if ans == "accept" {
+            //         status = "accept"
+            //         utils.UpdateFriendRequestStatus(db, status, username)
                     
-                    // here I put user1 and user2 into the friends table
-                    utils.PutFriendsToFriendsTable(db, loggedInUser, username) // need to fix the hard-coded Kyle!
-                } 
+            //         // here I put user1 and user2 into the friends table
+            //         utils.PutFriendsToFriendsTable(db, loggedInUser, username) // need to fix the hard-coded Kyle!
+            //     } 
     
-                if ans == "decline" {
-                    time.Sleep(time.Second*5)
-                    status = "decline"
-                    utils.DeclineFriendRequest(db, username)
-                }
-            } else {
-                fmt.Println("no status is:", status)
-            }
+            //     if ans == "decline" {
+            //         time.Sleep(time.Second*5)
+            //         status = "decline"
+            //         utils.DeclineFriendRequest(db, username)
+            //     }
+            //} else {
+                // fmt.Println("no status is:", status)
+            // }
 		} else {
 			fmt.Println("noooo", er)
 		}
