@@ -211,3 +211,27 @@ func GetToUserName(db *sql.DB, username string) (string, error) {
 	} 
 	return username, nil
 }
+
+
+func WhoSentFriendRequest(db *sql.DB, name string) []string {
+	var whosent []string
+
+	rows, err := db.Query("SELECT fromUserName FROM friendrequest WHERE toUserName = ?", name)
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var who string 
+		if err := rows.Scan(&who); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		whosent = append(whosent, who)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	return removeDuplicates(whosent)
+}
