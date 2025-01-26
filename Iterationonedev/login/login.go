@@ -38,6 +38,65 @@ type User struct {
     UI template.HTML
 }
 
+type Ans struct {
+    Answer string
+}
+
+func GetAnswer(w http.ResponseWriter, r *http.Request) {
+	var input = `
+	<div class="kyle">
+        <h1>Enter accept or decline for your answer</h1>
+        <form method="POST" action="/answer">    
+			<label for="kyle">Answer:</label>
+			<input type="text" id="kyle" name="kyle" placeholder="Enter your answer:" required><br><br>
+
+			<input type="submit" value="Submit Answer">
+		</form>
+	</div>
+	`
+    // Parse the HTML template
+    u, err := template.New("answer").Parse(input)
+    if err != nil {
+        log.Fatal(err)
+    }
+    // Initialize form data
+    user := Ans{}
+
+    if r.Method == http.MethodPost {
+        // Parse form data
+        err := r.ParseForm()
+        if err != nil {
+            http.Error(w, "Error parsing form data", http.StatusBadRequest)
+            return
+        }
+
+        y, e := template.New("kyle").Parse(input)
+        if e != nil {
+            http.Error(w, "Template parsing error", http.StatusInternalServerError)
+            return
+        }
+        utils.CatchError(e)
+
+        if err := y.Execute(w, input); err != nil {
+            http.Error(w, "Template execution error", http.StatusInternalServerError)
+            return
+        } 
+                
+        user.Answer = r.FormValue("kyle")
+        fmt.Println("value of userData.Answer is:", user.Answer)
+
+        if user.Answer == "accept" {
+            fmt.Println("you entered:", user.Answer)
+        }
+
+        if user.Answer == "decline" {
+            fmt.Println("you entered:", user.Answer)
+        }
+        return
+    }
+    u.Execute(w, user)
+}
+
 // Handler function to serve the form and process submissions
 func formHandler(w http.ResponseWriter, r *http.Request) {
     // Parse the HTML template
@@ -69,9 +128,10 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         if err != nil {
             if err == sql.ErrNoRows {
                 fmt.Println("Email is not in database!")
-            } else {
-                fmt.Println("Error retrieving password from database:", err)
-            }
+            } //else {
+                //fmt.Println("Error retrieving password from database:", err)
+                // return
+            // }
             return
         }
 
@@ -89,11 +149,12 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, "Template parsing error", http.StatusInternalServerError)
                 return
             }
+            
             if err := t.Execute(w, data); err != nil {
                 http.Error(w, "Template execution error", http.StatusInternalServerError)
                 return
             }
-
+            
             // Prepare friendsHTML template
             var friendsHTML = `
             <div class="fri">
@@ -113,7 +174,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, "Template parsing error", http.StatusInternalServerError)
                 return
             }
-
+            
             user, er := utils.RetrieveEmail(db, userData.Email)
             if er != nil {
                 log.Fatal(er)
@@ -127,44 +188,22 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             }
 
             value, err := utils.GetToUserName(db, user)
-            utils.CatchError(err)
 
             const status = "pending"
-            logged, to, stat, err := utils.GetPendingRequestsForLoggedInUser(db, user, value, status)
+            logged, to, stat := utils.GetPendingRequestsForLoggedInUser(db, user, value, status)
             utils.CatchError(err)
-            fmt.Println(logged, "sent a friend request to", to, stat)
+            fmt.Println("value of to variable is:", to, "- (this is a print statement!)")
 
-            if stat == "pending" {
-                // show the user who sent the friend request 
-                // and show some html to the user to either accept or decline it
+            if value != "pending" || value == "pending" {
+                fmt.Println("do something else, the else block has executed!")
                 var showData = `
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title></title>
-                </head>
-                <body>
-                    <form method="POST" action="/form">
-                        <h3 class="showData">Pending Friend Requests</h3>
-                        <p>Below are the people who sent you friend requests.</p>
-                        <br>
-                        <p>Enter accept or decline for your answer</p>
-                        
-                        <ul>
-                            {{range .}}
-                                <li>{{.}}</li> 
-                            {{end}}
-                        </ul>
-
-                        <label for="answer">Answer:</label>
-                        <input type="text" id="answer" name="answer" placeholder="Enter your answer" required><br><br>
-                        
-                        <input type="submit" value="Submit Answer">
-                    </form>
-                </body>
-                </html>
+                    <h3 class="showData">Pending Friend Requests</h3>
+                    <p>Below are the people who sent you friend requests.</p>                    
+                    <ul>
+                        {{range .}}
+                            <li>{{.}}</li> 
+                        {{end}}
+                    </ul>
                 `
 
                 t, err = template.New("showData").Parse(showData)
@@ -177,11 +216,39 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 if err := t.Execute(w, many); err != nil {
                     http.Error(w, "Template execution error", http.StatusInternalServerError)
                     return
-                }    
+                }         
+                return
+            }
+            utils.CatchError(err)
+
+            if stat == "pending" || value != "pending" || stat != "pending" {
+                // show the user who sent the friend request 
+                // and show some html to the user to either accept or decline it
+                var showData = `
+                    <h3 class="showData">Pending Friend Requests</h3>
+                    <p>Below are the people who sent you friend requests.</p>                    
+                    <ul>
+                        {{range .}}
+                            <li>{{.}}</li> 
+                        {{end}}
+                    </ul>
+                `
+
+                t, err = template.New("showData").Parse(showData)
+                if err != nil {
+                    http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                    return
+                }
+                
+                many := utils.WhoSentFriendRequest(db, logged)
+                if err := t.Execute(w, many); err != nil {
+                    http.Error(w, "Template execution error", http.StatusInternalServerError)
+                    return
+                }         
             } else {
                 // do something else....
             }
-
+            
             return // stop the rendering of the login page
         } else {
             t, err := template.New(ui.UIERROR).Parse(ui.UIERROR) 
@@ -196,7 +263,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             }
             return 
         }
-    }
+    } 
     // Render the HTML template with the form data
     tmpl.Execute(w, userData)
 }
