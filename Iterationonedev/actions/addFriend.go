@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"testing/utils"
-    // "time"
 )
 
 var addFriend = `
@@ -76,15 +75,12 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         userData.Username = r.FormValue("username")
 		enteredUsername := userData.Username
 
-        // userData.Answer = r.FormValue("answer")
-        // ans := strings.TrimSpace(strings.ToLower(userData.Answer))
-
         db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
         // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
 		username, er := utils.RetrieveUsernameFromDb(db, enteredUsername)
+        // GlobalVar = username
 		if err != nil {
-            fmt.Println("this is what is driving me insane...................")
 			log.Fatal(er)
 		}
     
@@ -101,10 +97,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             fmt.Println("error finding userid for", id)
         } 
         
-        // I have made the logged-in table 
-        // I have altered my login.go file to insert some data into this new table, but the name is hard-coded (so i need to write a query to get a username from an email)
-        // now the data is in the logged-in table, I now need to get that data
-
         lastUser, e := utils.GetLastUserLoggedIn(db)
         if e != nil {
             fmt.Println("error getting last user in logged-in table", e)
@@ -120,20 +112,16 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         }
         fmt.Println("emailId is:", emailId)
         
-        loggedInUser, e := utils.RetrieveEmail(db, emailId)
-        if e != nil {
-            fmt.Println("error finding name for", username)
-        }
+        loggedInUser := utils.RetrieveEmail(db, emailId)
+        // if e != nil {
+        //     fmt.Println("error finding name for", username)
+        // }
         fmt.Println("loggedInUser is:", loggedInUser)
 
         loggedInUserId, er := utils.GetUserId(db, loggedInUser)
         convertedValue := convertStringToInt(loggedInUserId)
 
         status := "pending"
-        // if we have any pending values we can either accept them or not
-        // if we accept the friend request then I, add my friend to a new db / table called "friends" --- done
-        // if I say decline then I, delete that friend out of the table --- done 
-        
 		if strings.TrimSpace(strings.ToLower(username)) == strings.TrimSpace(strings.ToLower(enteredUsername)) {
 
             if loggedInUser == username {
@@ -143,26 +131,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             // below I put the values for the friend request into a friend request table 
             utils.PutDataToFriendRequestTable(db, convertedValue, loggedInUser, idConverted, username, status)
-            // time.Sleep(time.Second*5)
-
-            // if status == "pending" {
-
-            //     if ans == "accept" {
-            //         status = "accept"
-            //         utils.UpdateFriendRequestStatus(db, status, username)
-                    
-            //         // here I put user1 and user2 into the friends table
-            //         utils.PutFriendsToFriendsTable(db, loggedInUser, username) // need to fix the hard-coded Kyle!
-            //     } 
-    
-            //     if ans == "decline" {
-            //         time.Sleep(time.Second*5)
-            //         status = "decline"
-            //         utils.DeclineFriendRequest(db, username)
-            //     }
-            //} else {
-                // fmt.Println("no status is:", status)
-            // }
 		} else {
 			fmt.Println("noooo", er)
 		}
