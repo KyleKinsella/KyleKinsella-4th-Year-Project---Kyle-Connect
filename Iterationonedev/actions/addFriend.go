@@ -79,7 +79,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
 		username, er := utils.RetrieveUsernameFromDb(db, enteredUsername)
-        // GlobalVar = username
 		if err != nil {
 			log.Fatal(er)
 		}
