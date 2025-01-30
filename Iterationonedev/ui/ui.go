@@ -57,3 +57,12 @@ var UIERROR = `
 </body>
 </html>
 `
+
+
+var FriendRequestAccepted = `
+	<p> You have accepted the friend request. Your friends list will update now.</p>
+`
+
+var FriendRequestDeclined = `
+	<p> You have declined the friend request.</p>
+`

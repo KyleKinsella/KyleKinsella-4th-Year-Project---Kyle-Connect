@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -44,7 +45,6 @@ func PutDataToDb(db *sql.DB, username, email, password string) error {
 	fmt.Println(username, "inserted into database.")
 	return err
 }
-
 
 func PutDataToFriendRequestTable(db *sql.DB, fromUserId int, fromUserName string, toUserId int, toUserName string, status string) error {
 	sql := "INSERT INTO friendrequest (fromUserId, fromUserName, toUserId, toUserName, status) VALUES (?, ?, ?, ?, ?)" 
@@ -106,14 +106,14 @@ func InsertLoggedInUserToTable(db *sql.DB, name, email string) (string, string) 
 	return name, email
 }
 
-func RetrieveEmail(db *sql.DB, email string) (string, error) {
+func RetrieveEmail(db *sql.DB, email string) string {
 	findEmail := db.QueryRow("SELECT username FROM communicators WHERE email = ?", email).Scan(&email)
 	if findEmail == sql.ErrNoRows {
-		return "", errors.New("no email found for that username")
+		return ""
 	} else if findEmail != nil {
-		return "", findEmail
+		return ""
 	} 
-	return email, nil
+	return email
 }
 
 func RetrieveUsername(db *sql.DB, username string) (string, error) {
@@ -191,15 +191,15 @@ func GetFriends(db *sql.DB, name string) []string {
 	return removeDuplicates(friends)
 }
 
-func GetPendingRequestsForLoggedInUser(db *sql.DB, loggedInUser, toUser, status string) (string, string, string, error) {
+func GetPendingRequestsForLoggedInUser(db *sql.DB, loggedInUser, toUser, status string) (string, string, string) {
 	pending := db.QueryRow("SELECT status FROM friendrequest WHERE status = ?", status).Scan(&status)
 	if pending == sql.ErrNoRows {
-		fmt.Println("no status of pending:", status)
-		return "", "", "", errors.New("no username found with a status of pending")
+		// fmt.Println("no status of pending:", status)
+		return "", "", ""
 	} else if pending != nil {
-		return "", "", "", pending
+		return "", "", ""
 	} 
-	return loggedInUser, toUser, status, nil
+	return loggedInUser, toUser, status
 }
 
 func GetToUserName(db *sql.DB, username string) (string, error) {
@@ -211,7 +211,6 @@ func GetToUserName(db *sql.DB, username string) (string, error) {
 	} 
 	return username, nil
 }
-
 
 func WhoSentFriendRequest(db *sql.DB, name string) []string {
 	var whosent []string
@@ -234,4 +233,18 @@ func WhoSentFriendRequest(db *sql.DB, name string) []string {
 		fmt.Println("error iterating over rows:", err)
 	}
 	return removeDuplicates(whosent)
+}
+
+func LoggedInPossibleFriend(db *sql.DB, user string) string {
+	var name string
+	err := db.QueryRow("SELECT fromUserName FROM friendrequest WHERE toUserName = ?", user).Scan(&name)
+	if err == sql.ErrNoRows {
+		// No matching rows
+		return ""
+	} else if err != nil {
+		// Log and handle other errors
+		log.Println("Error querying database:", err)
+		return ""
+	}
+	return name
 }
