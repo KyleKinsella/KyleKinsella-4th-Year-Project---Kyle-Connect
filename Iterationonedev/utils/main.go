@@ -191,6 +191,29 @@ func GetFriends(db *sql.DB, name string) []string {
 	return removeDuplicates(friends)
 }
 
+func GetFriends2(db *sql.DB, name string) []string {
+	var friends []string
+
+	rows, err := db.Query("SELECT user1 FROM friends WHERE user2 = ?", name)
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var friend string 
+		if err := rows.Scan(&friend); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		friends = append(friends, friend)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	return removeDuplicates(friends)
+}
+
 func GetPendingRequestsForLoggedInUser(db *sql.DB, loggedInUser, toUser, status string) (string, string, string) {
 	pending := db.QueryRow("SELECT status FROM friendrequest WHERE status = ?", status).Scan(&status)
 	if pending == sql.ErrNoRows {

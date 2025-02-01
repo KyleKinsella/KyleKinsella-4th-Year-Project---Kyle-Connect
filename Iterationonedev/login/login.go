@@ -117,13 +117,14 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 		userData.Password = r.FormValue("password")
 
         db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
-        // // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
         utils.CatchError(err)
         defer db.Close()
 
-
-        AcceptOrDecline(db, w, r, userData, "dockerr") // this string is the logged in user (I am having some issues with it!)
+        s := utils.RetrieveEmail(db, userData.Email)
+        fmt.Println("value of s is:", s)
+        AcceptOrDecline(db, w, r, userData, "teddy") // this string is the logged in user (I am having some issues with it!)
 
         hashedPassword, err := utils.RetrieveDataFromDb(db, userData.Email)  
         if err != nil {
@@ -187,6 +188,12 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, "Template execution error", http.StatusInternalServerError)
                 return
             }
+            
+            friends2 := utils.GetFriends2(db, user)
+            if err := t.Execute(w, friends2); err != nil {
+                http.Error(w, "Template execution error", http.StatusInternalServerError)
+                return
+            }
 
             value, err := utils.GetToUserName(db, user)
 
@@ -215,42 +222,9 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 if err := t.Execute(w, many); err != nil {
                     http.Error(w, "Template execution error", http.StatusInternalServerError)
                     return
-                }   
+                }  
                 return
             } 
-
-
-
-
-            // if stat == "pending" || value != "pending" || stat != "pending" {
-            //     // show the user who sent the friend request 
-            //     // and show some html to the user to either accept or decline it
-            //     var showData = `
-            //         <h3 class="showData">Pending Friend Requests</h3>
-            //         <p>Below are the people who sent you friend requests.</p>                    
-            //         <ul>
-            //             {{range .}}
-            //                 <li>{{.}}</li> 
-            //             {{end}}
-            //         </ul>
-            //     `
-
-            //     t, err = template.New("showData").Parse(showData)
-            //     if err != nil {
-            //         http.Error(w, "Template parsing error", http.StatusInternalServerError)
-            //         return
-            //     }
-                
-            //     many := utils.WhoSentFriendRequest(db, logged)
-            //     if err := t.Execute(w, many); err != nil {
-            //         http.Error(w, "Template execution error", http.StatusInternalServerError)
-            //         return
-            //     }     
-            //     return
-            // } else {
-            //     // do something else....
-            // }  
-
             return // stop the rendering of the login page
         } else {
             t, err := template.New(ui.UIERROR).Parse(ui.UIERROR) 
@@ -279,10 +253,13 @@ func AcceptOrDecline(db *sql.DB, w http.ResponseWriter, r *http.Request, f User,
     user := f.Email
 
     testlogged := getLogged
-    testlogged = utils.RetrieveEmail(db, user)
-    testlogged = getLogged
+    fmt.Println("value of testlogged is:", testlogged)
+    // getLogged = utils.RetrieveEmail(db, user)
+    // fmt.Println("testlogged here is:", testlogged)
+    // testlogged = getLogged
 
     friend := utils.LoggedInPossibleFriend(db, testlogged)
+    fmt.Println("friend:", friend)
 
     if result == "accept" {
         status := "accept"
@@ -296,6 +273,7 @@ func AcceptOrDecline(db *sql.DB, w http.ResponseWriter, r *http.Request, f User,
             log.Fatal(err)
         }
         yes.Execute(w, user)
+        return
     }
 
     if result == "decline" {
@@ -306,6 +284,7 @@ func AcceptOrDecline(db *sql.DB, w http.ResponseWriter, r *http.Request, f User,
             log.Fatal(err)
         }
         no.Execute(w, user)
+        return
     }  
 }
 
