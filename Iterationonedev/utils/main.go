@@ -271,3 +271,34 @@ func LoggedInPossibleFriend(db *sql.DB, user string) string {
 	}
 	return name
 }
+
+func InsertIntoClickedTable(db *sql.DB, name string) string {
+	sql := "INSERT into clicked (username) VALUES (?)"
+
+	_, err := db.Query(sql, name)
+	CatchError(err)
+
+	fmt.Println(name, "has been inserted into the clicked table")
+	return name
+}
+
+func InsertMessage(db *sql.DB, sender, receiver int, content, timestamp string) {
+	sql := "INSERT into messages (sender, receiver, content, timestamp) VALUES (?, ?, ?, ?)"
+	
+	_, err := db.Query(sql, sender, receiver, content, timestamp)
+	CatchError(err)
+
+	fmt.Println(sender, "sent a message to", receiver)
+	fmt.Println("Your message has been inserted into the messages table")
+}
+
+func GetLastUserClicked(db *sql.DB) (int, error) {
+	var id int
+	err := db.QueryRow("SELECT clickedId FROM clicked ORDER BY clickedId DESC LIMIT 1").Scan(&id)
+	if err == sql.ErrNoRows {
+		return 0, errors.New("no users found")
+	} else if err != nil {
+		return 0, err
+	} 
+	return id, nil
+}
