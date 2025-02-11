@@ -302,3 +302,27 @@ func GetLastUserClicked(db *sql.DB) (int, error) {
 	} 
 	return id, nil
 }
+
+func GetMessages(db *sql.DB, id int) []string {
+	var messages []string
+
+	rows, err := db.Query("SELECT content FROM messages WHERE receiver = ?", id)
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var message string 
+		if err := rows.Scan(&message); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		messages = append(messages, message)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	// return removeDuplicates(friends)
+	return messages
+}

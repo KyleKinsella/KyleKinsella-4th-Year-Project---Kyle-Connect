@@ -46,11 +46,11 @@ func (a Ans) String() string {
     return a.Answer
 }
 
-func GetAnswer(w http.ResponseWriter, r *http.Request) Ans {
+func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans { 
     var input = `
     <div class="kyle">
         <h1>Enter accept or decline for your answer</h1>
-        <form method="POST" action="/answer">    
+        <form method="POST" action="/form">    
             <label for="kyle">Answer:</label>
             <input type="text" id="kyle" name="kyle" placeholder="Enter your answer:" required><br><br>
 
@@ -59,11 +59,6 @@ func GetAnswer(w http.ResponseWriter, r *http.Request) Ans {
     </div>
     `
     
-    // Parse the HTML template
-    u, err := template.New("answer").Parse(input)
-    if err != nil {
-        log.Fatal(err)
-    }
     // Initialize form data
     user := Ans{}
 
@@ -90,14 +85,13 @@ func GetAnswer(w http.ResponseWriter, r *http.Request) Ans {
         user.Answer = r.FormValue("kyle")
         return user
     }
-    u.Execute(w, user)
     return user
 }
 
 // Handler function to serve the form and process submissions
 func formHandler(w http.ResponseWriter, r *http.Request) {
     // Parse the HTML template
-    tmpl, err := template.New("form").Parse(account)
+    tmpl, err := template.New("form").Parse(account) // might need to do it here!?
     if err != nil {
         log.Fatal(err)
     }
@@ -116,7 +110,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         userData.Email = r.FormValue("email")
 		userData.Password = r.FormValue("password")
 
-        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
+        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
         // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
         utils.CatchError(err)
@@ -124,7 +118,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         s := utils.RetrieveEmail(db, userData.Email)
         fmt.Println("value of s is:", s)
-        AcceptOrDecline(db, w, r, userData, "teddy") // this string is the logged in user (I am having some issues with it!)
+        AcceptOrDecline(db, w, r, userData, "Teddy") // this string is the logged in user (I am having some issues with it!)
 
         hashedPassword, err := utils.RetrieveDataFromDb(db, userData.Email)  
         if err != nil {
@@ -144,7 +138,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         if makeAccount.CheckPassword(userData.Password, hashedPassword) {
             fmt.Println("You have logged into your account.")
-
+            
             // Parse and execute the template
             t, err := template.New("UI").Parse(ui.UI)
             if err != nil {
@@ -157,6 +151,33 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 return
             }
 
+            // Prepare messagesRecieved template
+            var messagesRecieved = `
+            <div class="fri">
+                <h3 class="messages">Messages</h3>
+                <p>Below are all of your messages.</p>
+                <ul>
+                    {{range .}}
+                        <li>{{.}}</li>                    
+                    {{end}}
+                </ul>
+            </div>
+            `
+
+            // Parse the messagesRecieved template
+            t, err = template.New("message").Parse(messagesRecieved)
+            if err != nil {
+                http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                return
+            }
+
+            id, err := utils.GetLastUserClicked(db)
+            messages := utils.GetMessages(db, id)
+            if err := t.Execute(w, messages); err != nil {
+                http.Error(w, "Template execution error", http.StatusInternalServerError)
+                return
+            }  
+
             // Prepare friendsHTML template
             var friendsHTML = `
             <div class="fri">
@@ -164,7 +185,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 <p>Below are all of your friends.</p>
                 <ul>
                     {{range .}}
-                        <li>{{.}}</li>
+                        <li><a href="/friend/{{.}}">{{.}}</a></li>                    
                     {{end}}
                 </ul>
             </div>
@@ -239,18 +260,23 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             }
             return 
         }
-    } 
+    }     
     // Render the HTML template with the form data
     tmpl.Execute(w, userData)
 }
 
 func AcceptOrDecline(db *sql.DB, w http.ResponseWriter, r *http.Request, f User, getLogged string) {
-    answer := GetAnswer(w, r)
+    answer := GetAnswer(db, w, r)
+    fmt.Println("ANSWER:", answer)
 
     a := Ans{Answer: answer.Answer}
     result := a.String()
 
     user := f.Email
+    fmt.Println("user:", user)
+
+    s := utils.RetrieveEmail(db, user)
+    fmt.Println("value of s is:", s)
 
     testlogged := getLogged
     fmt.Println("value of testlogged is:", testlogged)
@@ -260,7 +286,7 @@ func AcceptOrDecline(db *sql.DB, w http.ResponseWriter, r *http.Request, f User,
 
     friend := utils.LoggedInPossibleFriend(db, testlogged)
     fmt.Println("friend:", friend)
-
+    
     if result == "accept" {
         status := "accept"
         utils.UpdateFriendRequestStatus(db, status, testlogged) // was testname now -> testlogged
@@ -291,6 +317,16 @@ func AcceptOrDecline(db *sql.DB, w http.ResponseWriter, r *http.Request, f User,
 func main() {
     // Set up the route and handler for the form
     http.HandleFunc("/", formHandler)
+
+    db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
+    // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+    utils.CatchError(err)
+    defer db.Close()
+    
+    http.HandleFunc("/friend/", func(w http.ResponseWriter, r *http.Request) {
+        friendName := r.URL.Path[len("/friend/"):]
+        utils.InsertIntoClickedTable(db, friendName) // i have what friend you clicked on!!!!
+    })
 
     // Start the HTTP server
     fmt.Println("Server started at http://localhost:8081")
