@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 	"testing/utils"
 )
 
@@ -29,6 +30,11 @@ var server = `
 
 type Server struct {
     ServerName string
+}
+
+func convertIntToString(id int) string {
+	str := strconv.Itoa(id)
+    return str
 }
 
 // Handler function to serve the form and process submissions
@@ -61,8 +67,15 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
 		loggedInId, err := utils.GetLastUserLoggedIn(db)
 		utils.CatchError(err)
+
+		converted := convertIntToString(loggedInId)
 		
-		utils.CreateServer(db, serverName, loggedInId)
+		emailFromId, err := utils.RetrieveEmailFromId(db, converted)
+		utils.CatchError(err)
+
+		name := utils.RetrieveEmail(db, emailFromId)
+
+		utils.CreateServer(db, serverName, name)
 	}
 	tmpl.Execute(w, serverData)
 }

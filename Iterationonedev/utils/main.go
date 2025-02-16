@@ -327,12 +327,37 @@ func GetMessages(db *sql.DB, id int) []string {
 	return messages
 }
 
-func CreateServer(db *sql.DB, serverName string, ownerId int) string {
-	sql := "INSERT into server (serverName, ownerId) VALUES (?, ?)"
+func CreateServer(db *sql.DB, serverName string, ownerOfServer string) string {
+	sql := "INSERT into server (serverName, ownerOfServer) VALUES (?, ?)"
 
-	_, err := db.Query(sql, serverName, ownerId)
+	_, err := db.Query(sql, serverName, ownerOfServer)
 	CatchError(err)
 
-	fmt.Println(serverName, "has been inserted into the server table")
+	fmt.Println(ownerOfServer, "has created a server called" , serverName, "this has been inserted into the server table")
 	return serverName
+}
+
+
+func Servers(db *sql.DB, ownerOfServer string) []string {
+	var serverList []string
+
+	rows, err := db.Query("SELECT serverName FROM server WHERE ownerOfServer = ?", ownerOfServer)
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var server string 
+		if err := rows.Scan(&server); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		serverList = append(serverList, server)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	// return removeDuplicates(whosent)
+	return serverList
 }
