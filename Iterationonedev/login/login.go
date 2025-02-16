@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 	"testing/makeAccount"
 	"testing/ui"
 	"testing/utils"
@@ -44,6 +45,11 @@ type Ans struct {
 
 func (a Ans) String() string {
     return a.Answer
+}
+
+func convertIntToString(id int) string {
+	str := strconv.Itoa(id)
+    return str
 }
 
 func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans { 
@@ -118,7 +124,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         s := utils.RetrieveEmail(db, userData.Email)
         fmt.Println("value of s is:", s)
-        AcceptOrDecline(db, w, r, userData, "Teddy") // this string is the logged in user (I am having some issues with it!)
+        AcceptOrDecline(db, w, r, userData, "monster") // this string is the logged in user (I am having some issues with it!)
 
         hashedPassword, err := utils.RetrieveDataFromDb(db, userData.Email)  
         if err != nil {
@@ -150,6 +156,43 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, "Template execution error", http.StatusInternalServerError)
                 return
             }
+
+            // Prepare servers template
+            var servers = `
+            <div class="fri">
+                <h3 class="servers">Servers</h3>
+                <p>Below are all of your servers.</p>
+                <ul>
+                    {{range .}}
+                        <li>{{.}}</li>                    
+                    {{end}}
+                </ul>
+            </div>
+            `
+            
+            // Parse the servers template
+            t, err = template.New("servers").Parse(servers)
+            if err != nil {
+                http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                return
+            }
+
+            loggedInId, err := utils.GetLastUserLoggedIn(db)
+            // utils.CatchError(err)
+            
+            converted := convertIntToString(loggedInId)
+		
+            emailFromId, err := utils.RetrieveEmailFromId(db, converted)
+            // utils.CatchError(err)
+            
+            name := utils.RetrieveEmail(db, emailFromId)
+
+            srs := utils.Servers(db, name)
+
+            if err := t.Execute(w, srs); err != nil {
+                http.Error(w, "Template execution error", http.StatusInternalServerError)
+                return
+            }  
 
             // Prepare messagesRecieved template
             var messagesRecieved = `
