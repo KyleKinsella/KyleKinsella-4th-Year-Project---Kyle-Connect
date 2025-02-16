@@ -361,3 +361,24 @@ func Servers(db *sql.DB, ownerOfServer string) []string {
 	// return removeDuplicates(whosent)
 	return serverList
 }
+
+func GetServerId(db *sql.DB) (int, error) {
+	var id int
+	err := db.QueryRow("SELECT serverId FROM server ORDER BY serverId DESC LIMIT 1").Scan(&id)
+	if err == sql.ErrNoRows {
+		return 0, errors.New("no users found")
+	} else if err != nil {
+		return 0, err
+	} 
+	return id, nil
+}
+
+func InsertChannelName(db *sql.DB, channelName string, serverId int) string {
+	sql := "INSERT into channel (channelName, serverId) VALUES (?, ?)"
+
+	_, err := db.Query(sql, channelName, serverId)
+	CatchError(err)
+
+	fmt.Println(channelName, "has been inserted into the channel table")
+	return channelName
+}
