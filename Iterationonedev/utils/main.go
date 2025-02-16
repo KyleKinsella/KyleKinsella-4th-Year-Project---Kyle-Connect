@@ -326,3 +326,13 @@ func GetMessages(db *sql.DB, id int) []string {
 	// return removeDuplicates(friends)
 	return messages
 }
+
+func CreateServer(db *sql.DB, serverName string, ownerId int) string {
+	sql := "INSERT into server (serverName, ownerId) VALUES (?, ?)"
+
+	_, err := db.Query(sql, serverName, ownerId)
+	CatchError(err)
+
+	fmt.Println(serverName, "has been inserted into the server table")
+	return serverName
+}
