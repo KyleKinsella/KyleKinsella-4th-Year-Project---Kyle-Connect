@@ -144,7 +144,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         if makeAccount.CheckPassword(userData.Password, hashedPassword) {
             fmt.Println("You have logged into your account.")
-            
+
             // Parse and execute the template
             t, err := template.New("UI").Parse(ui.UI)
             if err != nil {
@@ -161,7 +161,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             var servers = `
             <div class="fri">
                 <h3 class="servers">Servers</h3>
-                <p>Below are all of your servers.</p>
+                <p>Below are all of your servers that you have created.</p>
                 <ul>
                     {{range .}}
                         <li>{{.}}</li>                    
@@ -190,6 +190,33 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             srs := utils.Servers(db, name)
 
             if err := t.Execute(w, srs); err != nil {
+                http.Error(w, "Template execution error", http.StatusInternalServerError)
+                return
+            }  
+
+
+            // Prepare serversYouHaveBeenAddedTo template
+            var serversYouHaveBeenAddedTo = `
+            <div class="fri">
+                <h3 class="serversYouHaveBeenAddedTo">Servers you have been added to</h3>
+                <p>Below are all of the servers you have been added to.</p>
+                <ul>
+                    {{range .}}
+                        <li>{{.}}</li>                    
+                    {{end}}
+                </ul>
+            </div>
+            `
+
+            // Parse the serversYouHaveBeenAddedTo template
+            t, err = template.New("serversYouHaveBeenAddedTo").Parse(serversYouHaveBeenAddedTo)
+            if err != nil {
+                http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                return
+            }
+
+            addedTo := utils.AddedToServer(db, "monster") // come back to the hard-coded bit later on!!!!!!!
+            if err := t.Execute(w, addedTo); err != nil {
                 http.Error(w, "Template execution error", http.StatusInternalServerError)
                 return
             }  

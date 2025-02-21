@@ -217,7 +217,6 @@ func GetFriends2(db *sql.DB, name string) []string {
 func GetPendingRequestsForLoggedInUser(db *sql.DB, loggedInUser, toUser, status string) (string, string, string) {
 	pending := db.QueryRow("SELECT status FROM friendrequest WHERE status = ?", status).Scan(&status)
 	if pending == sql.ErrNoRows {
-		// fmt.Println("no status of pending:", status)
 		return "", "", ""
 	} else if pending != nil {
 		return "", "", ""
@@ -262,10 +261,8 @@ func LoggedInPossibleFriend(db *sql.DB, user string) string {
 	var name string
 	err := db.QueryRow("SELECT fromUserName FROM friendrequest WHERE toUserName = ?", user).Scan(&name)
 	if err == sql.ErrNoRows {
-		// No matching rows
 		return ""
 	} else if err != nil {
-		// Log and handle other errors
 		log.Println("Error querying database:", err)
 		return ""
 	}
@@ -323,7 +320,6 @@ func GetMessages(db *sql.DB, id int) []string {
 	if err = rows.Err(); err != nil {
 		fmt.Println("error iterating over rows:", err)
 	}
-	// return removeDuplicates(friends)
 	return messages
 }
 
@@ -336,7 +332,6 @@ func CreateServer(db *sql.DB, serverName string, ownerOfServer string) string {
 	fmt.Println(ownerOfServer, "has created a server called" , serverName, "this has been inserted into the server table")
 	return serverName
 }
-
 
 func Servers(db *sql.DB, ownerOfServer string) []string {
 	var serverList []string
@@ -358,7 +353,6 @@ func Servers(db *sql.DB, ownerOfServer string) []string {
 	if err = rows.Err(); err != nil {
 		fmt.Println("error iterating over rows:", err)
 	}
-	// return removeDuplicates(whosent)
 	return serverList
 }
 
@@ -391,4 +385,27 @@ func AddFriendToServer(db *sql.DB, friendName, serverName string) (string, strin
 
 	fmt.Println(friendName, "has been inserted into", serverName)
 	return friendName, serverName
+}
+
+func AddedToServer(db *sql.DB, friendName string) []string {
+	var addedTo []string
+
+	rows, err := db.Query("SELECT servername FROM friendshipevents WHERE friendname = ?", friendName)
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var added string 
+		if err := rows.Scan(&added); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		addedTo = append(addedTo, added)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	return removeDuplicates(addedTo)
 }
