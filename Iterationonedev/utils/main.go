@@ -382,3 +382,13 @@ func InsertChannelName(db *sql.DB, channelName string, serverId int) string {
 	fmt.Println(channelName, "has been inserted into the channel table")
 	return channelName
 }
+
+func AddFriendToServer(db *sql.DB, friendName, serverName string) (string, string) {
+	sql := "INSERT into friendshipevents (friendname, servername) VALUES (?, ?)"
+
+	_, err := db.Query(sql, friendName, serverName)
+	CatchError(err)
+
+	fmt.Println(friendName, "has been inserted into", serverName)
+	return friendName, serverName
+}
