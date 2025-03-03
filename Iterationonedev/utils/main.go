@@ -409,3 +409,28 @@ func AddedToServer(db *sql.DB, friendName string) []string {
 	}
 	return removeDuplicates(addedTo)
 }
+
+func NameOfPeopleInServer(db *sql.DB) []string {
+	var peopleInServer []string
+
+	rows, err := db.Query("SELECT friendname FROM friendshipevents")
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var fn string 
+		if err := rows.Scan(&fn); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		peopleInServer = append(peopleInServer, fn)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	// return removeDuplicates(addedTo)
+
+	return peopleInServer
+}

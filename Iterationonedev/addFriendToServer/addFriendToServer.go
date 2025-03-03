@@ -121,18 +121,43 @@ func main() {
     
 	http.HandleFunc("/friend/", func(w http.ResponseWriter, r *http.Request) {
 		friendName := r.URL.Path[len("/friend/"):]
+		fmt.Println("friendName is:", friendName)
 	
 		data = append(data, friendName)
+		for _, n := range data {
+			fmt.Println("n contains:", n)
+		}
 	})
 
 	http.HandleFunc("/server/", func(w http.ResponseWriter, r *http.Request) {
         serverName := r.URL.Path[len("/server/"):]
+		fmt.Println("serverName is:", serverName)
 
-		data = append(data, serverName)
-		fn := data[0]
-		sn := data[1]
-		
-		utils.AddFriendToServer(db, fn, sn)
+		peopleInServer := utils.NameOfPeopleInServer(db)
+		fmt.Println("here are the list of people in your server", peopleInServer)
+
+		var friendsToAdd string
+		var peopleInS string
+
+		for _, friendsToAdd = range data {
+			fmt.Println("this is what is in friendsToAdd:", friendsToAdd)
+		}
+
+		fmt.Println("\n\n")
+
+		for _, peopleInS = range peopleInServer {
+			fmt.Println("this is what is in peopleInS:", peopleInS)
+		}
+
+		if friendsToAdd == peopleInS {
+			fmt.Println("you cannot add someone that is in the server already!")
+			return
+		} else {
+			for _, n := range data {
+				// fmt.Println("this is a test, n:", n)
+				utils.AddFriendToServer(db, n, serverName)
+			}
+		}
     })
 
     // Start the HTTP server
