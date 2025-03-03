@@ -20,7 +20,7 @@ func convertIntToString(id int) string {
 func formHandler(w http.ResponseWriter, r *http.Request) {
     if r.Method == http.MethodGet {
 
-		t, err := template.New("UI").Parse(ui.Adding)
+		t, err := template.New("UI").Parse(ui.Removing)
 		if err != nil {
 			http.Error(w, "Template parsing error", http.StatusInternalServerError)
 			return
@@ -142,40 +142,19 @@ func main() {
         serverName := r.URL.Path[len("/server/"):]
 		fmt.Println("serverName is:", serverName)
 
-		peopleInServer := utils.NameOfPeopleInServer(db)
-		fmt.Println("here are the list of people in your server", peopleInServer)
-
-		var friendsToAdd string
-		var peopleInS string
-
-		for _, friendsToAdd = range data {
-			fmt.Println("this is what is in friendsToAdd:", friendsToAdd)
+		for _, n := range data {
+			utils.DeleteFriendFromServer(db, n, serverName)
 		}
 
-		fmt.Println("\n\n")
-
-		for _, peopleInS = range peopleInServer {
-			fmt.Println("this is what is in peopleInS:", peopleInS)
-		}
-
-		if friendsToAdd == peopleInS {
-			fmt.Println("you cannot add someone that is in the server already!")
+		t, err := template.New("UI").Parse(ui.FriendsDeletedFromServer)
+		if err != nil {
+			http.Error(w, "Template parsing error", http.StatusInternalServerError)
 			return
-		} else {
-			for _, n := range data {
-				// fmt.Println("this is a test, n:", n)
-				utils.AddFriendToServer(db, n, serverName)
-			}
-            t, err := template.New("UI").Parse(ui.FriendsAddedToServer)
-            if err != nil {
-                http.Error(w, "Template parsing error", http.StatusInternalServerError)
-                return
-            }
-			t.Execute(w, err)
 		}
+		t.Execute(w, err)
     })
 
     // Start the HTTP server
-    fmt.Println("Server started at http://localhost:8086")
-    log.Fatal(http.ListenAndServe(":8086", nil))
+    fmt.Println("Server started at http://localhost:8087")
+    log.Fatal(http.ListenAndServe(":8087", nil))
 }

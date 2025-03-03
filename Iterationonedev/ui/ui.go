@@ -13,9 +13,12 @@ var UI = `
         <!-- <hr id="a1" class="dashed"> -->
         <h3 class="actions">Actions</h3>
         <ul>
-            <li>Add friend</li>
+            <li>Add friend (Send Friend Request)</li>
+            <li>Send message to a friend</li>
             <li>Create a server</li>
-            <li>Add friend to server</li>
+            <li>Send message to a server</li>
+            <li>Add friends to server</li>
+            <li>Delete friends from server</li>
         </ul>
     </div>
 
@@ -50,4 +53,20 @@ var FriendRequestAccepted = `
 
 var FriendRequestDeclined = `
 	<p> You have declined the friend request.</p>
+`
+
+var FriendsAddedToServer = `
+	<p> The friends you selected have been added to your selected server.</p>
+`
+
+var FriendsDeletedFromServer = `
+	<p> The friends you selected have been removed from your selected server.</p>
+`
+
+var Adding = `
+	<h1> Select the friends you wish to add to your server.</h1>
+`
+
+var Removing = `
+	<h1> Select the friends you wish to remove from your server.</h1>
 `

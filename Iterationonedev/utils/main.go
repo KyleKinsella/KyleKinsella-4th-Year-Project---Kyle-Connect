@@ -434,3 +434,21 @@ func NameOfPeopleInServer(db *sql.DB) []string {
 
 	return peopleInServer
 }
+
+func DeleteFriendFromServer(db *sql.DB, friendToDelete, serverToDeleteFrom string) (string, string) {
+	sql := "DELETE FROM friendshipevents WHERE friendname=?"
+
+	stmt, err := db.Prepare(sql)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+
+	_, e := stmt.Exec(friendToDelete)
+	if e != nil {
+		log.Fatal(e)
+	}
+
+	fmt.Println(friendToDelete, "has been deleted from", serverToDeleteFrom)
+	return friendToDelete, serverToDeleteFrom
+}
