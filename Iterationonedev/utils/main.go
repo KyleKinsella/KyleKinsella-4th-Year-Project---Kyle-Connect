@@ -452,3 +452,26 @@ func DeleteFriendFromServer(db *sql.DB, friendToDelete, serverToDeleteFrom strin
 	fmt.Println(friendToDelete, "has been deleted from", serverToDeleteFrom)
 	return friendToDelete, serverToDeleteFrom
 }
+
+func GetOwnerOfServer(db *sql.DB) []string {
+	var owner []string
+
+	rows, err := db.Query("SELECT ownerOfServer FROM server")
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var name string 
+		if err := rows.Scan(&name); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		owner = append(owner, name)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	return removeDuplicates(owner)
+}

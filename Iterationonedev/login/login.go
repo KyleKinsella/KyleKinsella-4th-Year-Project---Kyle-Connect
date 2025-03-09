@@ -124,7 +124,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         s := utils.RetrieveEmail(db, userData.Email)
         fmt.Println("value of s is:", s)
-        AcceptOrDecline(db, w, r, userData, "monster") // this string is the logged in user (I am having some issues with it!)
+        AcceptOrDecline(db, w, r, userData, "Teddy") // this string is the logged in user (I am having some issues with it!)
 
         hashedPassword, err := utils.RetrieveDataFromDb(db, userData.Email)  
         if err != nil {
@@ -194,6 +194,18 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 return
             }  
 
+            ownerOfServer := utils.GetOwnerOfServer(db)
+            for _, n := range ownerOfServer {
+                // s is the logged-in user 
+                if s == n {
+                    t, err := template.New("UI").Parse(ui.AdminOfServer)
+                    if err != nil {
+                        http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                        return
+                    }
+                    t.Execute(w, err)
+                } 
+            }
 
             // Prepare serversYouHaveBeenAddedTo template
             var serversYouHaveBeenAddedTo = `
