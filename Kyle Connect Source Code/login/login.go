@@ -206,6 +206,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                     t.Execute(w, err)
                 } 
             }
+            
+            utils.Run(db)
 
             // Prepare serversYouHaveBeenAddedTo template
             var serversYouHaveBeenAddedTo = `
