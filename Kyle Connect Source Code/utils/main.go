@@ -485,81 +485,11 @@ func SendMessageToChannel(db *sql.DB, sender string, serverId int, content, time
 	fmt.Println(sender, "has sent a message to a channel in serverId number", serverId)
 }
 
-func GetOwner(db *sql.DB) (int, error) {
-	var own int
-	err := db.QueryRow("SELECT serverId FROM server ORDER BY serverId DESC LIMIT 1").Scan(&own)
-	if err == sql.ErrNoRows {
-		return 0, errors.New("no users found")
-	} else if err != nil {
-		return 0, err
-	} 
-	return own, nil
-}
-
-func GetOwnerNameFromId(db *sql.DB, id int) []string {
-	var name []string
-
-	rows, err := db.Query("SELECT ownerOfServer FROM server WHERE serverId = ?", id)
-	if err != nil {
-		fmt.Println("an error has occured when executing query!")	
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var nameFound string 
-		if err := rows.Scan(&nameFound); err != nil {
-			fmt.Println("error scanning row:", err)
-		}
-		name = append(name, nameFound)
-	}
-
-	if err = rows.Err(); err != nil {
-		fmt.Println("error iterating over rows:", err)
-	}
-	return removeDuplicates(name)
-}
-
-func GetSenderOfChannelMessage(db *sql.DB) []string {
-	var sender []string
-
-	rows, err := db.Query("SELECT sender FROM channelmessages ")
-	if err != nil {
-		fmt.Println("an error has occured when executing query!")	
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var senderFound string 
-		if err := rows.Scan(&senderFound); err != nil {
-			fmt.Println("error scanning row:", err)
-		}
-		sender = append(sender, senderFound)
-	}
-
-	if err = rows.Err(); err != nil {
-		fmt.Println("error iterating over rows:", err)
-	}
-	// return removeDuplicates(sender)
-	return sender
-}
-
-func ShowMessageInChannel(db *sql.DB, peopleInServer []string) []string {
-	var data []string
-	var splitData string
-
-	for _, n := range peopleInServer {
-		data = append(data, n)
-	}
-
-	for _, n := range data {
-		splitData = n
-	}
-
-	fmt.Println("splitData:", splitData)
-
+func SelectSenderAndContent(db *sql.DB) []string {
 	var content []string
+	var senderName string
 
-	rows, err := db.Query("SELECT content FROM channelmessages WHERE sender = ?", splitData)
+	rows, err := db.Query("SELECT sender, content FROM channelmessages")
 	if err != nil {
 		fmt.Println("an error has occured when executing query!")	
 	}
@@ -567,42 +497,16 @@ func ShowMessageInChannel(db *sql.DB, peopleInServer []string) []string {
 
 	for rows.Next() {
 		var contentFound string 
-		if err := rows.Scan(&contentFound); err != nil {
+		var name string
+		if err := rows.Scan(&contentFound, &name); err != nil {
 			fmt.Println("error scanning row:", err)
 		}
-		content = append(content, contentFound)
+		content = append(content, contentFound + ",", senderName, name + ",")
 	}
 
 	if err = rows.Err(); err != nil {
 		fmt.Println("error iterating over rows:", err)
 	}
-	return removeDuplicates(content)
-}
-
-func Run(db *sql.DB) {
-	owner, err := GetOwner(db)
-	CatchError(err)
-	fmt.Println("owner:", owner)
-
-	arr := []string{}
-
-	name := GetOwnerNameFromId(db, owner)
-	for _, n := range name {
-		fmt.Println(n)
-		arr = append(arr, n)
-	}
-
-	personWhoSentMessageToChannel := GetSenderOfChannelMessage(db)
-	// fmt.Println("personWhoSentMessageToChannel:", personWhoSentMessageToChannel)
-	for _, n := range personWhoSentMessageToChannel {
-		fmt.Println(n)
-		arr = append(arr, n)
-
-		// arr := n
-	}
-
-	fmt.Println("this is what is in arr(n):", arr)
-
-	messagesInChannel := ShowMessageInChannel(db, arr)
-	fmt.Println("messagesInChannel:", messagesInChannel)
+	// return removeDuplicates(content)
+	return content
 }
