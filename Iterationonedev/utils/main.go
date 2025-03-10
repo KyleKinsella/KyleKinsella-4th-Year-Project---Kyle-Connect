@@ -475,3 +475,12 @@ func GetOwnerOfServer(db *sql.DB) []string {
 	}
 	return removeDuplicates(owner)
 }
+
+func SendMessageToChannel(db *sql.DB, sender string, serverId int, content, timestamp string) {
+	sql := "INSERT into channelmessages (sender, serverId, content, timestamp) VALUES (?, ?, ?, ?)"
+
+	_, err := db.Query(sql, sender, serverId, content, timestamp)
+	CatchError(err)
+
+	fmt.Println(sender, "has sent a message to a channel in serverId number", serverId)
+}
