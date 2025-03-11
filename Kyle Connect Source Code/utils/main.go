@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"html/template"
 	"log"
+	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -501,7 +503,7 @@ func SelectSenderAndContent(db *sql.DB) []string {
 		if err := rows.Scan(&contentFound, &name); err != nil {
 			fmt.Println("error scanning row:", err)
 		}
-		content = append(content, contentFound + ",", senderName, name + ",")
+		content = append(content, contentFound + ":", senderName, name)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -509,4 +511,56 @@ func SelectSenderAndContent(db *sql.DB) []string {
 	}
 	// return removeDuplicates(content)
 	return content
+}
+
+func FriendsAddedToServer(db *sql.DB) []string {
+	var addedToServer []string
+
+	rows, err := db.Query("SELECT friendname FROM friendshipevents")
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var fn string 
+		if err := rows.Scan(&fn); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		addedToServer = append(addedToServer, fn)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	// return removeDuplicates(addedTo)
+	return addedToServer
+}
+
+func ChannelMessagesBeingParsed(db *sql.DB, w http.ResponseWriter) {
+	 // Prepare messagesInChannel template
+	 var messagesInChannel = `
+	 <div class="fri">
+		 <h3 class="messagesInChannel">Channel Message's</h3>
+		 <p>Below are the message's that have been sent to a channel</p>
+		 <ul>
+			 {{range .}}
+				 <p>{{.}}</p>                    
+			 {{end}}
+		 </ul>
+	 </div>
+	 `
+
+	// Parse the messagesInChannel template
+	t, err := template.New("messagesInChannel").Parse(messagesInChannel)
+	if err != nil {
+		http.Error(w, "Template parsing error", http.StatusInternalServerError)
+		return
+	}
+	
+	senderAndContent := SelectSenderAndContent(db)
+	if err := t.Execute(w, senderAndContent); err != nil {
+		http.Error(w, "Template execution error", http.StatusInternalServerError)
+		return
+	}  
 }

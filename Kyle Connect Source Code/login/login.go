@@ -124,7 +124,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         s := utils.RetrieveEmail(db, userData.Email)
         fmt.Println("value of s is:", s)
-        AcceptOrDecline(db, w, r, userData, "Teddy") // this string is the logged in user (I am having some issues with it!)
+        AcceptOrDecline(db, w, r, userData, "Tina") // this string is the logged in user (I am having some issues with it!)
 
         hashedPassword, err := utils.RetrieveDataFromDb(db, userData.Email)  
         if err != nil {
@@ -206,8 +206,25 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                     t.Execute(w, err)
                 } 
             }
-            
-            utils.Run(db)
+
+
+            peopleWhoOwnAServer := utils.GetOwnerOfServer(db)
+            fmt.Println("peopleWhoOwnAServer:", peopleWhoOwnAServer)
+
+            peopleAddedToServer := utils.FriendsAddedToServer(db)
+            fmt.Println("peopleAddedToServer:", peopleAddedToServer)
+
+            for _, n := range peopleWhoOwnAServer {
+                if s == n {
+                    utils.ChannelMessagesBeingParsed(db, w)
+                }
+            }
+
+            for _, n := range peopleAddedToServer {
+                if s == n {
+                    utils.ChannelMessagesBeingParsed(db, w)
+                }
+            }
 
             // Prepare serversYouHaveBeenAddedTo template
             var serversYouHaveBeenAddedTo = `
@@ -229,7 +246,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 return
             }
 
-            addedTo := utils.AddedToServer(db, "monster") // come back to the hard-coded bit later on!!!!!!!
+            addedTo := utils.AddedToServer(db, "Ethan") // come back to the hard-coded bit later on!!!!!!!
             if err := t.Execute(w, addedTo); err != nil {
                 http.Error(w, "Template execution error", http.StatusInternalServerError)
                 return
