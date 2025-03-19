@@ -52,6 +52,17 @@ func convertIntToString(id int) string {
     return str
 }
 
+// func redir(w http.ResponseWriter, r *http.Request, newPage string) {
+//     http.Redirect(w, r, newPage, http.StatusFound)
+// }
+
+func redir(w http.ResponseWriter, newPage string) {
+	html := fmt.Sprintf(`<html><body><p><a href="%s"> Add || Delete </a></p></body></html>`, newPage)
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(html))
+}
+
 func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans { 
     var input = `
     <div class="kyle">
@@ -144,7 +155,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         if makeAccount.CheckPassword(userData.Password, hashedPassword) {
             fmt.Println("You have logged into your account.")
-
+            
             // Parse and execute the template
             t, err := template.New("UI").Parse(ui.UI)
             if err != nil {
@@ -203,10 +214,17 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                         http.Error(w, "Template parsing error", http.StatusInternalServerError)
                         return
                     }
-                    t.Execute(w, err)
-                } 
-            }
+                    
+                    var addORRemove []string
+                    addF := "http://localhost:8086/addFriendToServer/addFriendToServer.go"
+                    removeF := "http://localhost:8087/deleteFriendFromServer/deleteFriendFromServer.go"
+                    addORRemove = append(addORRemove, addF)
+                    addORRemove = append(addORRemove, removeF)
 
+                    redir(w, addORRemove[0])
+                    t.Execute(w, err)
+                }
+            }
 
             peopleWhoOwnAServer := utils.GetOwnerOfServer(db)
             fmt.Println("peopleWhoOwnAServer:", peopleWhoOwnAServer)
@@ -428,7 +446,7 @@ func main() {
         friendName := r.URL.Path[len("/friend/"):]
         utils.InsertIntoClickedTable(db, friendName) // i have what friend you clicked on!!!!
     })
-
+    
     // Start the HTTP server
     fmt.Println("Server started at http://localhost:8081")
     log.Fatal(http.ListenAndServe(":8081", nil))
