@@ -12,6 +12,24 @@ import (
 	"testing/utils"
 )
 
+var (
+    sendFriendRequest = "http://localhost:8082/actions/addFriend.go"
+    sendMessageToFriend = "http://localhost:8083/sendMessage/sendMessage.go"
+    createServer = "http://localhost:8084/createServer/createServer.go"
+    sendMessageToServerPlusChannel = "http://localhost:8088/sendMessageToChannelInServer.go"
+    addFriend = "http://localhost:8086/addFriendToServer/addFriendToServer.go"
+    removeFriend = "http://localhost:8087/deleteFriendFromServer/deleteFriendFromServer.go"
+
+    tasks = []string {
+        sendFriendRequest,
+        sendMessageToFriend,
+        createServer,
+        sendMessageToServerPlusChannel,
+        addFriend,
+        removeFriend,
+    }
+)
+
 var account = `
 <!DOCTYPE html>
 <html>
@@ -52,13 +70,9 @@ func convertIntToString(id int) string {
     return str
 }
 
-// func redir(w http.ResponseWriter, r *http.Request, newPage string) {
-//     http.Redirect(w, r, newPage, http.StatusFound)
-// }
-
-func redir(w http.ResponseWriter, newPage string) {
-	html := fmt.Sprintf(`<html><body><p><a href="%s"> Add || Delete </a></p></body></html>`, newPage)
-	w.Header().Set("Content-Type", "text/html")
+func redir(w http.ResponseWriter, newPage string, n string) {   
+    html := fmt.Sprintf(`<html><body><p><ul><li><a href="%s">%s</a></li></ul></p></body></html>`, newPage, n)
+    w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }
@@ -168,6 +182,18 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 return
             }
 
+            redir(w, tasks[0], "Add friend (Send Friend Request)")
+            redir(w, tasks[1], "Send message to a friend")
+            redir(w, tasks[2], "Create a server")
+            redir(w, tasks[3], "Send message to a Channel (Server)")
+
+            t, err = template.New("UI").Parse(ui.Line)
+            if err != nil {
+                http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                return
+            }
+            t.Execute(w, t)
+
             // Prepare servers template
             var servers = `
             <div class="fri">
@@ -209,19 +235,16 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             for _, n := range ownerOfServer {
                 // s is the logged-in user 
                 if s == n {
-                    t, err := template.New("UI").Parse(ui.AdminOfServer)
+                    // Parse the TEST ui/ui.go TEST variable
+                    t, err = template.New("TEST").Parse(ui.TEST)
                     if err != nil {
                         http.Error(w, "Template parsing error", http.StatusInternalServerError)
                         return
                     }
-                    
-                    var addORRemove []string
-                    addF := "http://localhost:8086/addFriendToServer/addFriendToServer.go"
-                    removeF := "http://localhost:8087/deleteFriendFromServer/deleteFriendFromServer.go"
-                    addORRemove = append(addORRemove, addF)
-                    addORRemove = append(addORRemove, removeF)
 
-                    redir(w, addORRemove[0])
+                    redir(w, tasks[4], "Add friends to server")
+                    redir(w, tasks[5], "Delete friends from server")
+
                     t.Execute(w, err)
                 }
             }
