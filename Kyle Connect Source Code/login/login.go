@@ -347,13 +347,13 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             utils.InsertLoggedInUserToTable(db, user, userData.Email)
 
             friends := utils.GetFriends(db, user)
-            if err := t.Execute(w, friends); err != nil {
-                http.Error(w, "Template execution error", http.StatusInternalServerError)
-                return
-            }
-            
             friends2 := utils.GetFriends2(db, user)
-            if err := t.Execute(w, friends2); err != nil {
+
+            var totalFriends []string
+            totalFriends = append(totalFriends, friends...)
+            totalFriends = append(totalFriends, friends2...)
+            
+            if err := t.Execute(w, totalFriends); err != nil {
                 http.Error(w, "Template execution error", http.StatusInternalServerError)
                 return
             }
