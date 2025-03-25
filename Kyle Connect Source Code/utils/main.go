@@ -7,7 +7,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-
+	"time"
+	"strings"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -489,21 +490,32 @@ func SendMessageToChannel(db *sql.DB, sender string, serverId int, content, time
 
 func SelectSenderAndContent(db *sql.DB) []string {
 	var content []string
-	var senderName string
-
-	rows, err := db.Query("SELECT sender, content FROM channelmessages")
+	
+	rows, err := db.Query("SELECT sender, timestamp, content FROM channelmessages")
 	if err != nil {
 		fmt.Println("an error has occured when executing query!")	
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var contentFound string 
-		var name string
-		if err := rows.Scan(&contentFound, &name); err != nil {
+		var senderOfMessage string
+		var timestamp string
+		var ct string
+
+		if err := rows.Scan(&senderOfMessage, &timestamp, &ct); err != nil {
 			fmt.Println("error scanning row:", err)
 		}
-		content = append(content, contentFound + ":", senderName, name)
+
+		ct = strings.ReplaceAll(ct, "\r\n", "\n")
+		ct = strings.TrimSpace(ct)
+		
+		timestampStr := timestamp
+		if parsedTime, err := time.Parse("2006-01-02 15:04:05", timestamp); err == nil {
+			timestampStr = parsedTime.Format("Jan 02, 15:04")
+		}
+
+		formattedMessage := fmt.Sprintf("%s (%s):\n\n%s\n", senderOfMessage, timestampStr, ct)
+		content = append(content, formattedMessage)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -545,7 +557,7 @@ func ChannelMessagesBeingParsed(db *sql.DB, w http.ResponseWriter) {
 		 <p>Below are the message's that have been sent to a channel</p>
 		 <ul>
 			 {{range .}}
-				 <p>{{.}}</p>                    
+				 <p>{{.}}</p>           
 			 {{end}}
 		 </ul>
 	 </div>
@@ -562,5 +574,5 @@ func ChannelMessagesBeingParsed(db *sql.DB, w http.ResponseWriter) {
 	if err := t.Execute(w, senderAndContent); err != nil {
 		http.Error(w, "Template execution error", http.StatusInternalServerError)
 		return
-	}  
+	}
 }
