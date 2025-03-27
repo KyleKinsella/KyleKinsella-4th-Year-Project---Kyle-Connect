@@ -514,6 +514,9 @@ func SelectSenderAndContent(db *sql.DB) []string {
 			timestampStr = parsedTime.Format("Jan 02, 15:04")
 		}
 
+		senderOfMessage = strings.TrimSpace(senderOfMessage)
+
+		// formattedMessage := fmt.Sprintf("%s (%s):\n\n%s\n", senderOfMessage, timestampStr, ct)
 		formattedMessage := fmt.Sprintf("%s (%s):\n\n%s\n", senderOfMessage, timestampStr, ct)
 		content = append(content, formattedMessage)
 	}
@@ -557,7 +560,7 @@ func ChannelMessagesBeingParsed(db *sql.DB, w http.ResponseWriter) {
 		 <p>Below are the message's that have been sent to a channel</p>
 		 <ul>
 			 {{range .}}
-				 <p>{{.}}</p>           
+				<pre>{{.}}</pre>        
 			 {{end}}
 		 </ul>
 	 </div>
@@ -575,4 +578,103 @@ func ChannelMessagesBeingParsed(db *sql.DB, w http.ResponseWriter) {
 		http.Error(w, "Template execution error", http.StatusInternalServerError)
 		return
 	}
+}
+
+func GetChannelsInServer(db *sql.DB, serverName string) []string {
+	var channels []string
+
+	rows, err := db.Query("SELECT channelName FROM channel")
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var ch string 
+		if err := rows.Scan(&ch); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		channels = append(channels, ch)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	return removeDuplicates(channels)
+}
+
+func GetMessagesInChannel(db *sql.DB, serverId int) []string {
+	var messagesInchannel []string
+
+	rows, err := db.Query("SELECT content FROM channelmessages WHERE serverId = ?", serverId)
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var msgInChan string 
+		if err := rows.Scan(&msgInChan); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		messagesInchannel = append(messagesInchannel, msgInChan)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	return removeDuplicates(messagesInchannel)
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////
+
+
+func GetServerIdFromServerName(db *sql.DB, serverName string) []string {
+	var messagesInchannel []string
+
+	rows, err := db.Query("SELECT serverId from server WHERE serverName = ?", serverName)
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var msgInChan string 
+		if err := rows.Scan(&msgInChan); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		messagesInchannel = append(messagesInchannel, msgInChan)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	// return removeDuplicates(messagesInchannel)
+	return messagesInchannel
+}
+
+func GetCommunicatorsUsernames(db *sql.DB) []string {
+	var usernames []string
+
+	rows, err := db.Query("SELECT username from communicators ")
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user string 
+		if err := rows.Scan(&user); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		usernames = append(usernames, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	// return removeDuplicates(messagesInchannel)
+	return usernames
 }

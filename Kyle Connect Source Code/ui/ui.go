@@ -67,3 +67,11 @@ var Removing = `
 var TEST = `
     <h3>You created the above servers to add and delete friends.</h3>
 `
+
+var ThisUserNameIsAlreadyTaken = `
+	<h3>This username is already taken, you cannot make an account with this name, try again with a new username</h3>
+`
+
+var YourAccountHasBeenMade = `
+	<p>Your account has been made {{.Username}}.</p>
+`

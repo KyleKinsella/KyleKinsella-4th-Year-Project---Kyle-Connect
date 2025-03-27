@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"testing/ui"
 	"testing/utils"
 
 	// below are imports for the encryption
@@ -45,10 +46,6 @@ var account = `
 
         <input type="submit" value="Create Account">
     </form>
-
-    {{if .Username}}
-    <p>Your account has been made {{.Username}}.</p>
-    {{end}}
 </body>
 </html>
 `
@@ -88,11 +85,51 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             return 
         }
 
-        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
-        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
+        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
         utils.CatchError(err)
-        utils.PutDataToDb(db, userData.Username, userData.Email, passwordHashed)
+
+        usernames := utils.GetCommunicatorsUsernames(db)
+        for _, n := range usernames {
+            if n == userData.Username {
+                // fmt.Println("this username is already taken, you cannot make anaccount with this name, try again with a new username")
+                
+                w.Header().Set("Content-Type", "text/html")
+
+                t, err := template.New("TEST").Parse(ui.ThisUserNameIsAlreadyTaken)
+                if err != nil {
+                    http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                    return
+                }
+                t.Execute(w, nil)
+                return
+            } 
+        }
+
+        username := User{
+            Username: userData.Username,
+        }
+
+        for _, n := range usernames {
+            if n != userData.Username {
+                utils.PutDataToDb(db, userData.Username, userData.Email, passwordHashed)
+
+                // Parse and execute the template
+                t, err := template.New("").Parse(ui.YourAccountHasBeenMade)
+                if err != nil {
+                    http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                    return
+                }
+                
+                if err := t.Execute(w, username); err != nil {
+                    http.Error(w, "Template execution error", http.StatusInternalServerError)
+                    return
+                }
+                return
+            }
+        }
     }
+
     // Render the HTML template with the form data
     tmpl.Execute(w, userData)
 }
