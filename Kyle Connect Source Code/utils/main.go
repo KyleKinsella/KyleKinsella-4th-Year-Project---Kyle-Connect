@@ -7,8 +7,10 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"time"
+	"strconv"
 	"strings"
+	"time"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -306,7 +308,7 @@ func GetLastUserClicked(db *sql.DB) (int, error) {
 func GetMessages(db *sql.DB, id int) []string {
 	var messages []string
 
-	rows, err := db.Query("SELECT content FROM messages WHERE receiver = ?", id)
+	rows, err := db.Query("SELECT sender, content, timestamp FROM messages WHERE receiver = ?", id)
 	if err != nil {
 		fmt.Println("an error has occured when executing query!")	
 	}
@@ -314,10 +316,27 @@ func GetMessages(db *sql.DB, id int) []string {
 
 	for rows.Next() {
 		var message string 
-		if err := rows.Scan(&message); err != nil {
+		var sender string
+		var timestamp string
+		
+		if err := rows.Scan(&message, &sender, &timestamp); err != nil {
 			fmt.Println("error scanning row:", err)
 		}
-		messages = append(messages, message)
+		
+		timestampStr := timestamp
+		if parsedTime, err := time.Parse("2006-01-02 15:04:05", timestamp); err == nil {
+			timestampStr = parsedTime.Format("Jan 02, 15:04")
+		}
+
+		convertedStringToInt, err := strconv.Atoi(message)
+		CatchError(err)
+
+		username := GetLoggedInNameFromId(db, convertedStringToInt)
+
+		for _, n := range username {
+			formattedMessage := fmt.Sprintf("%s (%s):\n\n%s\n", n, timestampStr, sender)
+			messages = append(messages, formattedMessage)
+		}
 	}
 
 	if err = rows.Err(); err != nil {
@@ -677,4 +696,29 @@ func GetCommunicatorsUsernames(db *sql.DB) []string {
 	}
 	// return removeDuplicates(messagesInchannel)
 	return usernames
+}
+
+func GetLoggedInNameFromId(db *sql.DB, id int) []string {
+	var names []string
+
+	rows, err := db.Query("SELECT name FROM loggedin WHERE id = ?", id)
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user string 
+		if err := rows.Scan(&user); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		names = append(names, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	// return removeDuplicates(messagesInchannel)
+	// return usernames
+	return names
 }
