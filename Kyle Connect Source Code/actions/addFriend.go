@@ -13,23 +13,110 @@ import (
 
 var addFriend = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Kyle Connect - Add a friend / Send Friend Request</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kyle Connect - Add a Friend</title>
+    <style>
+        /* General Page Styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #141e30, #243b55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
+
+        /* Form Container */
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Heading */
+        h1 {
+            margin-bottom: 10px;
+            font-size: 24px;
+            color: #00aaff;
+        }
+
+        /* Description */
+        p {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        /* Form Styles */
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        input[type="username"] {
+            max-width: 400px;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            font-size: 16px;
+        }
+
+        /* Submit Button */
+        input[type="submit"] {
+            background-color: #00aaff;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0088cc;
+        }
+
+        /* Success Message */
+        .success-message {
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #00ff00;
+        }
+    </style>
 </head>
 <body>
-    <h1>Add a friend</h1>
-	<p>Enter a name of a friend that you would like to add</p>
-    <form method="POST" action="/form">
-        <label for="username">Username:</label>
-        <input type="username" id="username" name="username" placeholder="Enter username to add" required><br><br>
+    <div class="container">
+        <h1>Add a Friend</h1>
+        <p>Enter the username of a friend you’d like to add.</p>
+        <form method="POST" action="/form">
+            <label for="username">Username:</label>
+            <input type="username" id="username" name="username" placeholder="Enter username to add" required>
 
-        <input type="submit" value="Send friend request">
-    </form>
+            <input type="submit" value="Send Friend Request">
+        </form>
 
-    {{if .Username}}
-    <p>Your friend request has been sent to {{.Username}}!</p>
-    {{end}}
+        {{if .Username}}
+        <p class="success-message">Your friend request has been sent to {{.Username}}!</p>
+        {{end}}
+    </div>
 </body>
 </html>
 `
