@@ -12,20 +12,117 @@ import (
 
 var server = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kyle Connect - Create a Server</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #141e30, #243b55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 28px;
+            color: #00aaff;
+            font-weight: 600;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: 600;
+            margin-right: 10px;
+            white-space: nowrap;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 2px solid #444;
+            outline: none;
+            background-color: #1a2939;
+            color: white;
+            transition: border-color 0.3s ease-in-out;
+        }
+
+        input[type="text"]:focus {
+            border-color: #00aaff;
+        }
+
+        input[type="submit"] {
+            background-color: #00aaff;
+            color: white;
+            padding: 14px 0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            max-width: 400px;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0088cc;
+        }
+    </style>
 </head>
 <body>
-    <h1>Create a Server</h1>
-    <form method="POST" action="/form">
-        <label for="server">Server:</label>
-        <input type="text" id="server" name="server" placeholder="Enter your server name" required><br><br>
-
-        <input type="submit" value="Create Server">
-    </form>
+    <div class="container">
+        <h1>Create a Server</h1>
+        <p>Create a server, add your friends, and start communicating seamlessly!</p>
+        <form method="POST" action="/form">
+            <div class="input-group">
+                <label for="server">Server Name:</label>
+                <input type="text" id="server" name="server" placeholder="Enter your server name" required>
+            </div>
+            <input type="submit" value="Create Server">
+        </form>
+        
+        {{if .ServerName}}
+        <p class="success-message">Your server, {{.ServerName}}, has been successfully created!</p>
+        {{end}}
+    </div>
 </body>
 </html>
+
 `
 
 type Server struct {
