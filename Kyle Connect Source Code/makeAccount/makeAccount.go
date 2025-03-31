@@ -28,24 +28,119 @@ func CheckPassword(password, hash string) bool {
 
 var account = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kyle Connect - Make an Account</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: white;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        p {
+            margin-bottom: 20px;
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        /* Form Styling */
+        .input-container {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            transition: 0.3s ease-in-out;
+            border: 2px solid transparent;
+        }
+
+        .input-container:hover {
+            border-color: #007bff;
+        }
+
+        .icon {
+            margin-right: 10px;
+            color: #007bff;
+            font-size: 18px;
+        }
+
+        input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 16px;
+            padding: 5px;
+        }
+
+        input:focus {
+            border-bottom: 2px solid #007bff;
+        }
+
+        /* Submit Button */
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 18px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <h1>Make an Account</h1>
-    <form method="POST" action="/form">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" placeholder="Enter your name" required><br><br>
-
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" placeholder="Enter your email" required><br><br>
-
-  		<label for="password">Password:</label>
-        <input type="password" id="password" name="password" placeholder="Enter your password" required><br><br>
-
-        <input type="submit" value="Create Account">
-    </form>
+    <div class="container">
+        <h1>Create an Account</h1>
+        <p>Join Kyle Connect today!</p>
+        <form method="POST" action="/form">
+            <div class="input-container">
+                <i class="fa-solid fa-user icon"></i>
+                <input type="text" id="name" name="name" placeholder="Enter your name" required>
+            </div>
+            <div class="input-container">
+                <i class="fa-solid fa-envelope icon"></i>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+            <div class="input-container">
+                <i class="fa-solid fa-lock icon"></i>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn">Sign Up</button>
+        </form>
+    </div>
 </body>
 </html>
 `
@@ -125,6 +220,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                     http.Error(w, "Template execution error", http.StatusInternalServerError)
                     return
                 }
+                http.ListenAndServe(":8081", nil) // go to login page upon after making your account
                 return
             }
         }
