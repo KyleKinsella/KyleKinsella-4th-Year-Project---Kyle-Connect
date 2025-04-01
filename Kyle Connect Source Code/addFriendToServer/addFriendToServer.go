@@ -42,14 +42,128 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Prepare friendsHTML template
 		var friendsHTML = `
-		<div class="fri">
-			<h3 class="friends">Friends</h3>
-			<p>Below are all of your friends.</p>
-			<ul>
-				{{range .}}
-					<li><a href="/friend/{{.}}">{{.}}</a></li>                    
-				{{end}}
-			</ul>
+
+   		<style>
+		
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Main Container */
+        .container {
+            width: 60%;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 3px solid #0056b3;
+        }
+
+        /* Header */
+        .header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0056b3;
+            border-bottom: 3px solid #0056b3;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Layout for Sections */
+        .content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+			margin: 20px;
+        }
+
+        /* Individual Section */
+        .section {
+            flex: 1;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+            
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Friends Section */
+        .friends-section {
+            background: #e3eaf5;
+        }
+
+        /* Servers Section */
+        .servers-section {
+            background: #f2e3f5;
+        }
+
+        /* Vertical Divider */
+        .divider {
+            width: 2px;
+            background: #0056b3;
+            height: auto;
+        }
+
+        /* Section Headings */
+        .section h3 {
+            color: #0056b3;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        /* List Styles */
+        .section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .section li {
+            background: #d0e1ff;
+            margin: 6px 0;
+            padding: 10px;
+            border-radius: 6px;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        /* Links */
+        .section a {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: bold;
+        }
+
+        /* Hover Effects */
+        .section li:hover {
+            background: #0056b3;
+            transform: scale(1.03);
+        }
+
+        .section li:hover a {
+            color: white;
+        }
+    	</style>
+
+		<div class="content">
+            	<!-- Friends Section -->
+            	<div class="section friends-section">    
+					<h3 class="friends">Friends</h3>
+					<p>Below are all of your friends.</p>
+					<ul>
+						{{range .}}
+							<li><a href="/friend/{{.}}">{{.}}</a></li>                    
+						{{end}}
+					</ul>
+				</div>
 		</div>
 		`
 
@@ -70,28 +184,42 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 		user := utils.RetrieveEmail(db, email)
 
 		friends := utils.GetFriends(db, user)
-		if err := t.Execute(w, friends); err != nil {
+		// if err := t.Execute(w, friends); err != nil {
+		// 	http.Error(w, "Template execution error", http.StatusInternalServerError)
+		// 	return
+		// }
+		
+		friends2 := utils.GetFriends2(db, user)
+		// if err := t.Execute(w, friends2); err != nil {
+			// http.Error(w, "Template execution error", http.StatusInternalServerError)
+			// return
+		// } 
+
+		var totalFriends []string
+		totalFriends = append(totalFriends, friends...)
+		totalFriends = append(totalFriends, friends2...)
+
+		if err := t.Execute(w, totalFriends); err != nil {
 			http.Error(w, "Template execution error", http.StatusInternalServerError)
 			return
 		}
-		
-		friends2 := utils.GetFriends2(db, user)
-		if err := t.Execute(w, friends2); err != nil {
-			http.Error(w, "Template execution error", http.StatusInternalServerError)
-			return
-		} 
 		 
 		// Prepare servers template
 		var servers = `
-		<div class="fri">
-			<h3 class="servers">Servers</h3>
-			<p>Below are all of your servers.</p>
-			<ul>
-				{{range .}}
-					<li><a href="/server/{{.}}">{{.}}</a></li>                    
-				{{end}}
-			</ul>
-		</div>
+
+		
+        		<div class="content">
+            		<!-- Friends Section -->
+            		<div class="section friends-section">    
+						<h3 class="servers">Servers</h3>
+						<p>Below are all of your servers.</p>
+						<ul>
+							{{range .}}
+								<li><a href="/server/{{.}}">{{.}}</a></li>                    
+							{{end}}
+						</ul>
+					</div>
+				</div>
 		`
 		
 		// Parse the servers template
