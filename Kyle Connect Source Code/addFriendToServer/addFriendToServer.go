@@ -184,17 +184,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 		user := utils.RetrieveEmail(db, email)
 
 		friends := utils.GetFriends(db, user)
-		// if err := t.Execute(w, friends); err != nil {
-		// 	http.Error(w, "Template execution error", http.StatusInternalServerError)
-		// 	return
-		// }
-		
 		friends2 := utils.GetFriends2(db, user)
-		// if err := t.Execute(w, friends2); err != nil {
-			// http.Error(w, "Template execution error", http.StatusInternalServerError)
-			// return
-		// } 
-
+		
 		var totalFriends []string
 		totalFriends = append(totalFriends, friends...)
 		totalFriends = append(totalFriends, friends2...)
@@ -206,20 +197,18 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 		 
 		// Prepare servers template
 		var servers = `
-
-		
-        		<div class="content">
-            		<!-- Friends Section -->
-            		<div class="section friends-section">    
-						<h3 class="servers">Servers</h3>
-						<p>Below are all of your servers.</p>
-						<ul>
-							{{range .}}
-								<li><a href="/server/{{.}}">{{.}}</a></li>                    
-							{{end}}
-						</ul>
-					</div>
-				</div>
+		<div class="content">
+			<!-- Friends Section -->
+			<div class="section friends-section">    
+				<h3 class="servers">Servers</h3>
+				<p>Below are all of your servers.</p>
+				<ul>
+					{{range .}}
+						<li><a href="/server/{{.}}">{{.}}</a></li>                    
+					{{end}}
+				</ul>
+			</div>
+		</div>
 		`
 		
 		// Parse the servers template
