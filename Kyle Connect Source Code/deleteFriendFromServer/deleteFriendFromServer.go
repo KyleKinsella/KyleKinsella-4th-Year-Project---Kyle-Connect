@@ -42,10 +42,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Prepare friendsHTML template
 		var friendsHTML = `
-
 		<style>
 		
-        /* General Styles */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
@@ -56,7 +54,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             margin: 0;
         }
 
-        /* Main Container */
         .container {
             width: 60%;
             background: white;
@@ -67,7 +64,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             border: 3px solid #0056b3;
         }
 
-        /* Header */
         .header {
             font-size: 24px;
             font-weight: bold;
@@ -77,7 +73,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             margin-bottom: 20px;
         }
 
-        /* Layout for Sections */
         .content {
             display: flex;
             justify-content: space-between;
@@ -86,7 +81,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 			margin: 20px;
         }
 
-        /* Individual Section */
         .section {
             flex: 1;
             padding: 15px;
@@ -97,31 +91,26 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        /* Friends Section */
         .friends-section {
             background: #e3eaf5;
         }
 
-        /* Servers Section */
         .servers-section {
             background: #f2e3f5;
         }
 
-        /* Vertical Divider */
         .divider {
             width: 2px;
             background: #0056b3;
             height: auto;
         }
 
-        /* Section Headings */
         .section h3 {
             color: #0056b3;
             font-size: 20px;
             font-weight: bold;
         }
 
-        /* List Styles */
         .section ul {
             list-style: none;
             padding: 0;
@@ -135,14 +124,12 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             transition: background 0.3s ease, transform 0.2s ease;
         }
 
-        /* Links */
         .section a {
             text-decoration: none;
             color: #0056b3;
             font-weight: bold;
         }
 
-        /* Hover Effects */
         .section li:hover {
             background: #0056b3;
             transform: scale(1.03);
@@ -248,6 +235,75 @@ func main() {
 	http.HandleFunc("/friend/", func(w http.ResponseWriter, r *http.Request) {
 		friendName := r.URL.Path[len("/friend/"):]
 		fmt.Println("friendName is:", friendName)
+
+        selectedFriend := `
+		<div class="selection-container">
+    		<h1 class="selection-message">You have selected: <span class="friend-name">%s</span> to remove from your server</h1>
+		
+			<button class="back-button">
+        		<a href="http://localhost:8087/deleteFriendFromServer/deleteFriendFromServer.go">Back</a>
+    		</button>
+		</div>
+
+		<style>
+		body {
+			background-color: #f0f2f5;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+		}
+
+		.selection-container {
+			text-align: center;
+			padding: 40px;
+			background-color: #fff;
+			border-radius: 12px;
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+			max-width: 600px;
+		}
+
+		.selection-message {
+			font-size: 28px;
+			color: #333;
+		}
+
+		.friend-name {
+			color: #007bff;
+			font-weight: bold;
+		}
+
+		.back-button {
+			padding: 10px 20px;
+			background-color: #007bff   ;
+			color: white;
+			font-size: 16px;
+			border-radius: 6px;
+			border: none;
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+    	}
+
+		.back-button:hover {
+			background-color: #0056b3;
+		}
+
+		.back-button {
+			text-align: center;
+			margin-top: 20px;
+		}
+
+		a {
+        	color: black;
+        	text-decoration: none;
+    	}
+		</style>
+		`
+
+		fmt.Fprintf(w, selectedFriend, friendName)
 	
 		data = append(data, friendName)
 		for _, n := range data {
@@ -259,16 +315,49 @@ func main() {
         serverName := r.URL.Path[len("/server/"):]
 		fmt.Println("serverName is:", serverName)
 
-		for _, n := range data {
-			utils.DeleteFriendFromServer(db, n, serverName)
+        peopleInServer := utils.NameOfPeopleInServer(db)
+        fmt.Println("people in server is:", peopleInServer)
+        
+        var friendsToAdd string
+        var peopleInS string
+
+        for _, friendsToAdd = range data {
+			fmt.Println("this is what is in friendsToAdd:", friendsToAdd)
 		}
 
-		t, err := template.New("UI").Parse(ui.FriendsDeletedFromServer)
-		if err != nil {
-			http.Error(w, "Template parsing error", http.StatusInternalServerError)
-			return
+        for _, peopleInS = range peopleInServer {
+			fmt.Println("this is what is in peopleInS:", peopleInS)
 		}
-		t.Execute(w, err)
+
+        if friendsToAdd == peopleInS {
+            fmt.Println("you can delete someone due to them being in the server...")
+
+            w.Header().Set("Content-Type", "text/html")
+
+            t, err := template.New("").Parse(ui.FriendsDeletedFromServer)
+		    if err != nil {
+			    http.Error(w, "Template parsing error", http.StatusInternalServerError)
+			    return
+		    }
+            t.Execute(w, nil)
+           
+            for _, n := range data {
+			    utils.DeleteFriendFromServer(db, n, serverName)
+		    }
+			return
+        } else {
+            fmt.Println("you cannot delete someone from a server, that is not in a SERVER!!!")
+
+            w.Header().Set("Content-Type", "text/html")
+
+            t, err := template.New("").Parse(ui.CannotDeleteSomeoneWhoIsNotInTheServer)
+			if err != nil {
+				http.Error(w, "Template parsing error", http.StatusInternalServerError)
+				return
+			}
+			t.Execute(w, nil)
+			return
+        }
     })
 
     // Start the HTTP server
