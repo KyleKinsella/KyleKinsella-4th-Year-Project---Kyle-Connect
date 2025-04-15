@@ -380,7 +380,7 @@ func Servers(db *sql.DB, ownerOfServer string) []string {
 	if err = rows.Err(); err != nil {
 		fmt.Println("error iterating over rows:", err)
 	}
-	return serverList
+	return removeDuplicates(serverList)
 }
 
 func GetServerId(db *sql.DB) (int, error) {

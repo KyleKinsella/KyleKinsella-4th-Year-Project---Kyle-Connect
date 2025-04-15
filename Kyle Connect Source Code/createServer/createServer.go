@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"testing/utils"
+    "testing/ui"
 )
 
 var server = `
@@ -166,12 +167,26 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 		utils.CatchError(err)
 
 		converted := convertIntToString(loggedInId)
-		
+
 		emailFromId, err := utils.RetrieveEmailFromId(db, converted)
 		utils.CatchError(err)
 
 		name := utils.RetrieveEmail(db, emailFromId)
 
+        namesOfServers := utils.Servers(db, name)
+        for _, n := range namesOfServers {
+            if n == serverData.ServerName {
+                fmt.Println("you cannot create another server with this server name:", n)
+
+                t, err := template.New("").Parse(ui.CannotUseThisServerName)
+                if err != nil {
+                    http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                    return
+                }
+                t.Execute(w, nil)
+                return
+            }
+        }
 		utils.CreateServer(db, serverName, name)
 	}
 	tmpl.Execute(w, serverData)
