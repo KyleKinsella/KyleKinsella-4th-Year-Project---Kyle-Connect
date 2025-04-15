@@ -10,6 +10,7 @@ import (
 	"testing/makeAccount"
 	"testing/ui"
 	"testing/utils"
+    // "strings"
 )
 
 var (
@@ -20,7 +21,10 @@ var (
     addFriend = "http://localhost:8086/addFriendToServer/addFriendToServer.go"
     removeFriend = "http://localhost:8087/deleteFriendFromServer/deleteFriendFromServer.go"
 
+	// newUrl = strings.Replace(sendFriendRequest, "8081", "8082", 1) // replace first occurrence
+
     tasks = []string {
+        // newUrl,
         sendFriendRequest,
         sendMessageToFriend,
         createServer,
@@ -32,21 +36,115 @@ var (
 
 var account = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kyle Connect - Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: white;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        p {
+            margin-bottom: 20px;
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        /* Form Styling */
+        .input-container {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            transition: 0.3s ease-in-out;
+            border: 2px solid transparent;
+        }
+
+        .input-container:hover {
+            border-color: #007bff;
+        }
+
+        .icon {
+            margin-right: 10px;
+            color: #007bff;
+            font-size: 18px;
+        }
+
+        input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 16px;
+            padding: 5px;
+        }
+
+        input:focus {
+            border-bottom: 2px solid #007bff;
+        }
+
+        /* Submit Button */
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 18px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <h1>Login</h1>
-    <form method="POST" action="/form">
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" placeholder="Enter your email" required><br><br>
-
-  		<label for="password">Password:</label>
-        <input type="password" id="password" name="password" placeholder="Enter your password" required><br><br>
-
-        <input type="submit" value="Login">
-    </form>
+    <div class="container">
+        <h1>Login</h1>
+        <p>Welcome back to Kyle Connect!</p>
+        <form method="POST" action="/form">
+            <div class="input-container">
+                <i class="fa-solid fa-envelope icon"></i>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+            <div class="input-container">
+                <i class="fa-solid fa-lock icon"></i>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+        </form>
+    </div>
 </body>
 </html>
 `
@@ -55,6 +153,10 @@ type User struct {
     Email string
 	Password string
     UI template.HTML
+    ServerName string
+    Channels []string
+
+    Channel string
 }
 
 type Ans struct {
@@ -71,14 +173,149 @@ func convertIntToString(id int) string {
 }
 
 func redir(w http.ResponseWriter, newPage string, n string) {   
-    html := fmt.Sprintf(`<html><body><p><ul><li><a href="%s">%s</a></li></ul></p></body></html>`, newPage, n)
+
+
+    h := `
+      <html>
+  <head>
+    <style>
+      ul.test {
+        list-style-type: none; /* Removes the dots */
+        padding: 0;
+        margin: 0;
+      }
+
+      ul.test li {
+        margin: 5px 0;
+        padding-left: 15px; /* Moves the link to the right */
+      }
+
+      ul.test li a {
+        text-decoration: none;
+        color: #007BFF;
+        font-weight: bold;
+      }
+
+      ul.test li a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <ul class="test">
+      <li><a href="%s">%s</a></li>
+    </ul>
+  </body>
+</html>
+
+    `
+    
+    
+    html := fmt.Sprintf(h, newPage, n)
     w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }
 
+// func v() {
+//     url := "http://localhost:8081/actions/addFriend.go"
+// 	newUrl := strings.Replace(url, "8081", "8082", 1) // replace first occurrence
+
+// 	fmt.Println("Original URL:", url)
+// 	fmt.Println("Updated URL:", newUrl)
+// }
+
 func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans { 
     var input = `
+   <html>
+<head>
+    <style>
+        /* General Body Styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Container for the Form */
+        .kyle {
+            max-width: 500px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Heading Style */
+        .kyle h1 {
+            font-size: 1.75rem;
+            color: #111827;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        /* Label Styling */
+        label {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* Input Field Styling */
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.5rem 0 1.5rem 0;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        /* Submit Button Styling */
+        input[type="submit"] {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Submit Button Hover Effect */
+        input[type="submit"]:hover {
+            background-color: #2563eb;
+        }
+
+        /* For Small Adjustments on Mobile */
+        @media (max-width: 600px) {
+            .kyle {
+                padding: 1rem;
+                width: 90%;
+            }
+
+            .kyle h1 {
+                font-size: 1.5rem;
+            }
+
+            input[type="text"] {
+                font-size: 0.9rem;
+            }
+
+            input[type="submit"] {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
     <div class="kyle">
         <h1>Enter accept or decline for your answer</h1>
         <form method="POST" action="/form">    
@@ -88,6 +325,10 @@ func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans {
             <input type="submit" value="Submit Answer">
         </form>
     </div>
+
+</body>
+</html>
+
     `
     
     // Initialize form data
@@ -149,7 +390,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         s := utils.RetrieveEmail(db, userData.Email)
         fmt.Println("value of s is:", s)
-        AcceptOrDecline(db, w, r, userData, "Tina") // this string is the logged in user (I am having some issues with it!)
+        // AcceptOrDecline(db, w, r, userData, "Tina") // this string is the logged in user (I am having some issues with it!)
+        AcceptOrDecline(db, w, r, userData, "Martin") // this string is the logged in user (I am having some issues with it!)
 
         hashedPassword, err := utils.RetrieveDataFromDb(db, userData.Email)  
         if err != nil {
@@ -196,15 +438,70 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             // Prepare servers template
             var servers = `
-            <div class="fri">
-                <h3 class="servers">Servers</h3>
-                <p>Below are all of your servers that you have created.</p>
-                <ul>
+
+            <style>
+            body {
+                background-color: #a7b1c5;
+            }
+
+            .servers-container {
+                max-width: 600px;
+                margin: 2rem auto;
+                padding: 1.5rem;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 1rem;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            .servers-title {
+                font-size: 1.75rem;
+                color: #111827;
+                margin-bottom: 0.5rem;
+            }
+
+            .servers-description {
+                font-size: 1rem;
+                color: #6b7280;
+                margin-bottom: 1.25rem;
+            }
+
+            .servers-list {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .servers-list li {
+                margin-bottom: 0.75rem;
+            }
+
+            .server-link {
+                display: inline-block;
+                padding: 0.5rem 1rem;
+                background-color: #3b82f6;
+                color: #fff;
+                border-radius: 0.5rem;
+                text-decoration: none;
+                transition: background-color 0.2s ease-in-out;
+            }
+
+            .server-link:hover {
+                background-color: #2563eb;
+            }
+
+            </style>
+
+            <div class="servers-container">
+                <h3 class="servers-title">Servers</h3>
+                <p class="servers-description">Below are all of your servers that you have created.</p>
+                <ul class="servers-list">
                     {{range .}}
-                        <li>{{.}}</li>                    
+                        <li><a href="/serverClicked/{{.}}" class="server-link">{{.}}</a></li>                                  
                     {{end}}
                 </ul>
             </div>
+
             `
             
             // Parse the servers template
@@ -249,28 +546,79 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 }
             }
 
-            peopleWhoOwnAServer := utils.GetOwnerOfServer(db)
-            fmt.Println("peopleWhoOwnAServer:", peopleWhoOwnAServer)
+            // peopleWhoOwnAServer := utils.GetOwnerOfServer(db)
+            // fmt.Println("peopleWhoOwnAServer:", peopleWhoOwnAServer)
 
-            peopleAddedToServer := utils.FriendsAddedToServer(db)
-            fmt.Println("peopleAddedToServer:", peopleAddedToServer)
+            // peopleAddedToServer := utils.FriendsAddedToServer(db)
+            // fmt.Println("peopleAddedToServer:", peopleAddedToServer)
 
-            for _, n := range peopleWhoOwnAServer {
-                if s == n {
-                    utils.ChannelMessagesBeingParsed(db, w)
-                }
-            }
+            // for _, n := range peopleWhoOwnAServer {
+            //     if s == n {
+            //         utils.ChannelMessagesBeingParsed(db, w)
+            //     }
+            // }
 
-            for _, n := range peopleAddedToServer {
-                if s == n {
-                    utils.ChannelMessagesBeingParsed(db, w)
-                }
-            }
+            // for _, n := range peopleAddedToServer {
+            //     if s == n {
+            //         utils.ChannelMessagesBeingParsed(db, w)
+            //     }
+            // }
 
             // Prepare serversYouHaveBeenAddedTo template
             var serversYouHaveBeenAddedTo = `
-            <div class="fri">
-                <h3 class="serversYouHaveBeenAddedTo">Servers you have been added to</h3>
+
+            <style>
+            .servers-container {
+                max-width: 600px;
+                margin: 2rem auto;
+                padding: 1.5rem;
+                background-color: #f9fafb;
+                border-radius: 1rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            .servers-title {
+                font-size: 1.75rem;
+                color: #111827;
+                margin-bottom: 0.5rem;
+            }
+
+            .servers-description {
+                font-size: 1rem;
+                color: #6b7280;
+                margin-bottom: 1.25rem;
+            }
+
+            .servers-list {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .servers-list li {
+                margin-bottom: 0.75rem;
+            }
+
+            .server-link {
+                display: inline-block;
+                padding: 0.5rem 1rem;
+                background-color: #3b82f6;
+                color: #fff;
+                border-radius: 0.5rem;
+                text-decoration: none;
+                transition: background-color 0.2s ease-in-out;
+            }
+
+            .server-link:hover {
+                background-color: #2563eb;
+            }
+
+            </style>
+
+
+            <div class="servers-container">
+                <h3 class="servers-title">Servers you have been added to</h3>
                 <p>Below are all of the servers you have been added to.</p>
                 <ul>
                     {{range .}}
@@ -287,7 +635,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 return
             }
 
-            addedTo := utils.AddedToServer(db, "Ethan") // come back to the hard-coded bit later on!!!!!!!
+            addedTo := utils.AddedToServer(db, s) // come back to the hard-coded bit later on!!!!!!! (FIXED THIS ON: 01/04/2025)
             if err := t.Execute(w, addedTo); err != nil {
                 http.Error(w, "Template execution error", http.StatusInternalServerError)
                 return
@@ -295,12 +643,62 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             // Prepare messagesRecieved template
             var messagesRecieved = `
-            <div class="fri">
-                <h3 class="messages">Messages</h3>
+
+            <style>
+            .servers-container {
+                max-width: 600px;
+                margin: 2rem auto;
+                padding: 1.5rem;
+                background-color: #f9fafb;
+                border-radius: 1rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            .servers-title {
+                font-size: 1.75rem;
+                color: #111827;
+                margin-bottom: 0.5rem;
+            }
+
+            .servers-description {
+                font-size: 1rem;
+                color: #6b7280;
+                margin-bottom: 1.25rem;
+            }
+
+            .servers-list {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .servers-list li {
+                margin-bottom: 0.75rem;
+            }
+
+            .server-link {
+                display: inline-block;
+                padding: 0.5rem 1rem;
+                background-color: #3b82f6;
+                color: #fff;
+                border-radius: 0.5rem;
+                text-decoration: none;
+                transition: background-color 0.2s ease-in-out;
+            }
+
+            .server-link:hover {
+                background-color: #2563eb;
+            }
+
+            </style>
+
+            <div class="servers-container">
+                <h3 class="servers-title">Messages</h3>
                 <p>Below are all of your messages.</p>
                 <ul>
                     {{range .}}
-                        <li>{{.}}</li>                    
+                        <pre>{{.}}</pre>                    
                     {{end}}
                 </ul>
             </div>
@@ -322,9 +720,59 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             // Prepare friendsHTML template
             var friendsHTML = `
-            <div class="fri">
-                <h3 class="friends">Friends</h3>
-                <p>Below are all of your friends.</p>
+            
+            <style>
+            .servers-container {
+                max-width: 600px;
+                margin: 2rem auto;
+                padding: 1.5rem;
+                background-color: #f9fafb;
+                border-radius: 1rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            .servers-title {
+                font-size: 1.75rem;
+                color: #111827;
+                margin-bottom: 0.5rem;
+            }
+
+            .servers-description {
+                font-size: 1rem;
+                color: #6b7280;
+                margin-bottom: 1.25rem;
+            }
+
+            .servers-list {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .servers-list li {
+                margin-bottom: 0.75rem;
+            }
+
+            .server-link {
+                display: inline-block;
+                padding: 0.5rem 1rem;
+                background-color: #3b82f6;
+                color: #fff;
+                border-radius: 0.5rem;
+                text-decoration: none;
+                transition: background-color 0.2s ease-in-out;
+            }
+
+            .server-link:hover {
+                background-color: #2563eb;
+            }
+
+            </style>
+
+            <div class="servers-container">
+                <h3 class="servers-title">Friends</h3>
+                <p class="friendsLi">Below are all of your friends.</p>
                 <ul>
                     {{range .}}
                         <li><a href="/friend/{{.}}">{{.}}</a></li>                    
@@ -352,7 +800,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             var totalFriends []string
             totalFriends = append(totalFriends, friends...)
             totalFriends = append(totalFriends, friends2...)
-            
+
             if err := t.Execute(w, totalFriends); err != nil {
                 http.Error(w, "Template execution error", http.StatusInternalServerError)
                 return
@@ -366,8 +814,59 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             if value != "pending" || value == "pending" || stat != "pending" || stat == "pending" {
                 var showData = `
-                <h3 class="showData">Pending Friend Requests</h3>
-                    <p>Below are the people who sent you friend requests.</p>                    
+
+                <style>
+                .servers-container {
+                    max-width: 600px;
+                    margin: 2rem auto;
+                    padding: 1.5rem;
+                    background-color: #f9fafb;
+                    border-radius: 1rem;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                }
+
+                .servers-title {
+                    font-size: 1.75rem;
+                    color: #111827;
+                    margin-bottom: 0.5rem;
+                }
+
+                .servers-description {
+                    font-size: 1rem;
+                    color: #6b7280;
+                    margin-bottom: 1.25rem;
+                }
+
+                .servers-list {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                }
+
+                .servers-list li {
+                    margin-bottom: 0.75rem;
+                }
+
+                .server-link {
+                    display: inline-block;
+                    padding: 0.5rem 1rem;
+                    background-color: #3b82f6;
+                    color: #fff;
+                    border-radius: 0.5rem;
+                    text-decoration: none;
+                    transition: background-color 0.2s ease-in-out;
+                }
+
+                .server-link:hover {
+                    background-color: #2563eb;
+                }
+
+                </style>
+
+                <div class="servers-container">
+                    <h3 class="servers-title">Pending Friend Requests</h3>
+                    <p class="friendsLi">Below are the people who sent you friend requests.</p>                    
                     <ul>
                         {{range .}}
                             <li>{{.}}</li> 
@@ -386,6 +885,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                     http.Error(w, "Template execution error", http.StatusInternalServerError)
                     return
                 }  
+                // AcceptOrDecline(db, w, r, userData, "Martin") // this string is the logged in user (I am having some issues with it!)
                 return
             } 
             return // stop the rendering of the login page
@@ -460,6 +960,8 @@ func main() {
     // Set up the route and handler for the form
     http.HandleFunc("/", formHandler)
 
+    // v()
+    
     db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
     // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
     utils.CatchError(err)
@@ -469,8 +971,166 @@ func main() {
         friendName := r.URL.Path[len("/friend/"):]
         utils.InsertIntoClickedTable(db, friendName) // i have what friend you clicked on!!!!
     })
-    
+
+    var sn string
+
+    http.HandleFunc("/serverClicked/", func(w http.ResponseWriter, r *http.Request) {
+        serverName := r.URL.Path[len("/serverClicked/"):]
+        channelsInServer := utils.GetChannelsInServer(db, serverName)
+
+        sn = serverName
+
+        user := User{
+            ServerName: serverName,
+            Channels: channelsInServer,
+        }
+
+        // Prepare channelsInServerTemplate template
+        var channelsInServerTemplate = `
+        <div class="fri">
+            <h3 class="serversYouHaveBeenAddedTo">Here are all of the Channel's that are in {{.ServerName}}.</h3>
+            <p></p>
+            <ul>
+                {{range .Channels}}
+                    <li><a href="/channelClicked/{{.}}">{{.}}</a></li>                    
+                {{end}}
+            </ul>
+        </div>
+        `
+
+        // Parse the channelsInServerTemplate template
+        t, err := template.New("channelsInServerTemplate").Parse(channelsInServerTemplate)
+        if err != nil {
+            http.Error(w, "Template parsing error", http.StatusInternalServerError)
+            return
+        }
+
+        if err := t.Execute(w, user); err != nil {
+            http.Error(w, "Template execution error", http.StatusInternalServerError)
+            return
+        }  
+    })
+
+    http.HandleFunc("/channelClicked/", func(w http.ResponseWriter, r *http.Request) {
+        channelName := r.URL.Path[len("/channelClicked/"):]
+        fmt.Println("channel name:", channelName)
+
+        // this is the server name you clicked on
+        fmt.Println("SN:", sn)
+        
+        // gets a server id depending on what you clicked on for (sn above)
+        serverIdFromServerName := utils.GetServerIdFromServerName(db, sn)
+        fmt.Println("serverIdFromServerName:", serverIdFromServerName)
+
+
+        for _, n := range serverIdFromServerName {
+            num, err := strconv.Atoi(n)
+            utils.CatchError(err)
+        
+            msgInChan := utils.GetMessagesInChannel(db, num)
+            if len(msgInChan) == 0 {
+                fmt.Println("no messages where found for:", sn, serverIdFromServerName)
+            }
+
+            fmt.Println("msgInChan:", msgInChan)
+            for _, n2 := range msgInChan {
+                fmt.Println("n2:", n2, "\n")
+            }
+
+            // msgInChan = utils.SelectSenderAndContent(db)
+            
+            uuu := User{
+                Channel: channelName,
+                Channels: msgInChan,
+            }
+
+            // Prepare serversYouHaveBeenAddedTo template
+            var serversYouHaveBeenAddedTo = `
+            <div class="fri">
+                <h3 class="serversYouHaveBeenAddedTo">Messages sent to this channel: {{.ServerName}} {{.Channel}}</h3>
+                <p></p>
+                <ul>
+                    {{range .Channels}}
+                        <pre>{{.}}</pre>                    
+                    {{end}}
+                </ul>
+            </div>
+            `
+ 
+            // Parse the serversYouHaveBeenAddedTo template
+            t, err := template.New("serversYouHaveBeenAddedTo").Parse(serversYouHaveBeenAddedTo)
+            if err != nil {
+                http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                return
+            }
+
+            // addedTo := utils.AddedToServer(db, "Ethan") // come back to the hard-coded bit later on!!!!!!!
+            
+            // below works but this is shown everywhere!!!!::: //
+            // msgInChan = utils.SelectSenderAndContent(db)
+            // fmt.Println("TESTING:", msgInChan)
+
+            // if num == 
+
+            // for _, m := range msgInChan {
+            //     if m == num {
+
+            //     }
+            // }
+
+            // was msgInChan: //
+            if err := t.Execute(w, uuu); err != nil {
+                http.Error(w, "Template execution error", http.StatusInternalServerError)
+                return
+            }  
+
+            // utils.ChannelMessagesBeingParsed(db, w)
+        }
+
+
+        // for i:=0; i<len(f); i++ {
+        //     msgInChan := utils.GetMessagesInChannel(db, i)
+        //     fmt.Println("msgInChan:", msgInChan)
+        // }
+
+        // msgInChan := utils.GetMessagesInChannel(db, 22)
+        // fmt.Println("msgInChan:", msgInChan)
+
+        // for _, n := range msgInChan {
+            // fmt.Println(n, "\n")
+        // }
+
+
+        // serverName := r.URL.Path[len("/serverClicked/"):]
+
+        
+        // serverName := r.URL.Path[len("/serverClicked/"):]
+        // fmt.Println("server name:", serverName)
+
+
+
+
+
+
+        // fmt.Println("SN:", sn)
+
+        // f := utils.Test(db, sn)
+        // fmt.Println("f:", f)
+    })
+
+
+    // usernames := utils.GetCommunicatorsUsernames(db)
+    // for _, n := range usernames {
+    //     fmt.Println("username that are in my database are:", n)
+    // }
+
     // Start the HTTP server
     fmt.Println("Server started at http://localhost:8081")
     log.Fatal(http.ListenAndServe(":8081", nil))
+
+    // usernames := utils.GetCommunicatorsUsernames(db)
+
+    // for _, n := range usernames {
+    //     fmt.Println("username that are in my database are:", n)
+    // }
 }

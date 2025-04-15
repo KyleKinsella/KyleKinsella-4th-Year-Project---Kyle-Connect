@@ -1,0 +1,50 @@
+
+body {
+    background-color: #a7b1c5;
+}
+
+.servers-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.servers-title {
+    font-size: 1.75rem;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.servers-description {
+    font-size: 1rem;
+    color: #6b7280;
+    margin-bottom: 1.25rem;
+}
+
+.servers-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.servers-list li {
+    margin-bottom: 0.75rem;
+}
+
+.server-link {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: #3b82f6;
+    color: #fff;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.server-link:hover {
+    background-color: #2563eb;
+}

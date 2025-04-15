@@ -43,6 +43,11 @@ func RetrieveUsernameFromDb(db *sql.DB, username string) (string, error) {
 }
 
 func PutDataToDb(db *sql.DB, username, email, password string) error {
+
+	// if db == nil {
+	// 	fmt.Println("db error:", db)
+	// }
+
 	sql := "INSERT INTO communicators (username, email, password) VALUES (?, ?, ?)"
 	_, err := db.Query(sql, username, email, password)
 	CatchError(err)

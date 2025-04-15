@@ -185,6 +185,30 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         utils.CatchError(err)
 
         usernames := utils.GetCommunicatorsUsernames(db)
+        fmt.Println("usernames:", usernames)
+
+        username := User{
+            Username: userData.Username,
+        }
+
+        if usernames == nil {
+            utils.PutDataToDb(db, userData.Username, userData.Email, passwordHashed)
+
+               // Parse and execute the template
+               t, err := template.New("").Parse(ui.YourAccountHasBeenMade)
+               if err != nil {
+                   http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                   return
+               }
+               
+               if err := t.Execute(w, username); err != nil {
+                   http.Error(w, "Template execution error", http.StatusInternalServerError)
+                   return
+               }
+               http.ListenAndServe(":8081", nil) // go to login page upon after making your account
+               return
+        }
+
         for _, n := range usernames {
             if n == userData.Username {
                 // fmt.Println("this username is already taken, you cannot make anaccount with this name, try again with a new username")
@@ -201,9 +225,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             } 
         }
 
-        username := User{
-            Username: userData.Username,
-        }
+      
 
         for _, n := range usernames {
             if n != userData.Username {

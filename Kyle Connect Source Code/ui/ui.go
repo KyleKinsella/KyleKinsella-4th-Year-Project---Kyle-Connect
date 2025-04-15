@@ -54,6 +54,12 @@ var FriendRequestDeclined = `
 
 var FriendsAddedToServer = `
 	<p> The friends you selected have been added to your selected server.</p>
+
+    <style>
+    p {
+        text-align: center;
+    }
+    </style>
 `
 
 var FriendsDeletedFromServer = `
@@ -76,6 +82,12 @@ var Removing = `
 
 var TEST = `
     <h3>You created the above servers to add and delete friends.</h3>
+
+    <style>
+        h3 {
+            padding-left: 15px; /* Moves the link to the right */
+        }
+    </style>
 `
 
 var ThisUserNameIsAlreadyTaken = `
@@ -256,4 +268,7 @@ var YourAccountHasBeenMade = `
 		<h3>Your account has been made {{.Username}}.</h3> 
 		<a href="http://localhost:8081/login/login.go"><button class="btn">Login</button></a>
 	</div>
+`
+
+var ServerCreated = `
 `

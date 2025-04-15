@@ -8,9 +8,7 @@ import (
 )
 
 var welcomePage = `
-
 		<style>
-       /* General Styling */
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(to right, #141e30, #243b55);
@@ -44,7 +42,6 @@ var welcomePage = `
             opacity: 0.8;
         }
 
-        /* Button Container */
         .input-container {
             display: flex;
             flex-direction: column;
@@ -52,7 +49,6 @@ var welcomePage = `
             margin-top: 20px;
         }
 
-        /* Button Styling */
         .btn {
             background-color: #007bff;
             color: white;
