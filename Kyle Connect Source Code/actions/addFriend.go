@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing/utils"
+    "testing/ui"
 )
 
 var addFriend = `
@@ -167,13 +168,34 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         userData.Username = r.FormValue("username")
 		enteredUsername := userData.Username
 
-        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
-        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
+        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
 		username, er := utils.RetrieveUsernameFromDb(db, enteredUsername)
 		if err != nil {
 			log.Fatal(er)
 		}
+
+        if username == "" {
+            communicators := utils.GetCommunicatorsUsernames(db)
+            for _, n := range communicators {
+                if n != username {
+                    fmt.Println("the name you entered", enteredUsername, "is not within my system, try again with a new name...")
+                    
+                    w.Header().Set("Content-Type", "text/html")
+
+                    t, err := template.New("").Parse(ui.NoUsernameWithThatName)
+                    if err != nil {
+                        http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                        return
+                    }
+                    t.Execute(w, nil)
+                    return
+                }
+            }
+        } else {
+            fmt.Println("username is:", username)
+        }
     
 		if er != nil {
 			log.Fatal("error retrieving username from database", er)
@@ -212,6 +234,13 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         loggedInUserId, er := utils.GetUserId(db, loggedInUser)
         convertedValue := convertStringToInt(loggedInUserId)
 
+        friends := utils.GetFriends(db, loggedInUser)
+        friends2 := utils.GetFriends2(db, loggedInUser)
+
+        var totalFriends []string
+        totalFriends = append(totalFriends, friends...)
+        totalFriends = append(totalFriends, friends2...)
+        
         status := "pending"
 		if strings.TrimSpace(strings.ToLower(username)) == strings.TrimSpace(strings.ToLower(enteredUsername)) {
 
@@ -220,6 +249,21 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 return
             }
 
+            for _, n := range totalFriends {
+                if n == username {
+                    fmt.Println("you cannot send a friend request because you are alraedy friends ")
+
+                    w.Header().Set("Content-Type", "text/html")
+
+                    t, err := template.New("").Parse(ui.CannotSendFriendRequest)
+                    if err != nil {
+                        http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                        return
+                    }
+                    t.Execute(w, nil)
+                    return
+                }
+            }
             // below I put the values for the friend request into a friend request table 
             utils.PutDataToFriendRequestTable(db, convertedValue, loggedInUser, idConverted, username, status)
 		} else {
