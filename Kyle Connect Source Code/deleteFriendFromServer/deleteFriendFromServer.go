@@ -325,6 +325,19 @@ func main() {
 			fmt.Println("this is what is in friendsToAdd:", friendsToAdd)
 		}
 
+		if data == nil {
+			fmt.Println("you cannot delete nobody from a server!")
+
+			t, err := template.New("").Parse(ui.CannotDeleteNobodyFromAServer)
+			if err != nil {
+				http.Error(w, "Template parsing error", http.StatusInternalServerError)
+				return
+			}
+			t.Execute(w, nil)
+			return
+		}
+
+
         for _, peopleInS = range peopleInServer {
 			fmt.Println("this is what is in peopleInS:", peopleInS)
 		}

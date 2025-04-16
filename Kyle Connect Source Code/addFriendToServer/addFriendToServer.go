@@ -323,6 +323,18 @@ func main() {
 			fmt.Println("this is what is in friendsToAdd:", friendsToAdd)
 		}
 
+		if data == nil {
+			fmt.Println("you cannot add nobody to a server!")
+
+			t, err := template.New("").Parse(ui.CannotAddNobodyToAServer)
+			if err != nil {
+				http.Error(w, "Template parsing error", http.StatusInternalServerError)
+				return
+			}
+			t.Execute(w, nil)
+			return
+		}
+
 		fmt.Println("\n\n")
 
 		for _, peopleInS = range peopleInServer {
