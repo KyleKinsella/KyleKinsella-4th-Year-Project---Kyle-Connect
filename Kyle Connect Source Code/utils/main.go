@@ -727,3 +727,26 @@ func GetLoggedInNameFromId(db *sql.DB, id int) []string {
 	// return usernames
 	return names
 }
+
+func Channels(db *sql.DB, serverId int) []string {
+	var channelList []string
+
+	rows, err := db.Query("SELECT channelName FROM channel WHERE serverId = ?", serverId)
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var channel string 
+		if err := rows.Scan(&channel); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		channelList = append(channelList, channel)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	return removeDuplicates(channelList)
+}

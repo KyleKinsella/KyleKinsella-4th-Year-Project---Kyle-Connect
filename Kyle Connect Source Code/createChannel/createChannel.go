@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"testing/utils"
+    "testing/ui"
 )
 
 var channel = `
@@ -159,6 +160,20 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 		serverId, err := utils.GetServerId(db)
 		utils.CatchError(err)
 
+        channels := utils.Channels(db, serverId)
+        for _, n := range channels {
+            if n == channelData.ChannelName {
+                fmt.Println("you cannot create another channel with this channel name:", n)
+
+                t, err := template.New("").Parse(ui.CannotUseThisChannelName)
+                if err != nil {
+                    http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                    return
+                }
+                t.Execute(w, nil)
+                return
+            }
+        }
 		utils.InsertChannelName(db, channelName, serverId)
 	}
 	tmpl.Execute(w, channelData)
