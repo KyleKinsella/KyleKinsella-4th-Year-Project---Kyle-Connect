@@ -750,3 +750,26 @@ func Channels(db *sql.DB, serverId int) []string {
 	}
 	return removeDuplicates(channelList)
 }
+
+func GetUsernameFromClickedTable(db *sql.DB, id int) []string {
+	var usernames []string
+
+	rows, err := db.Query("SELECT username FROM clicked WHERE clickedId = ?", id)
+	if err != nil {
+		fmt.Println("an error has occured when executing query!")	
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user string 
+		if err := rows.Scan(&user); err != nil {
+			fmt.Println("error scanning row:", err)
+		}
+		usernames = append(usernames, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("error iterating over rows:", err)
+	}
+	return usernames
+}

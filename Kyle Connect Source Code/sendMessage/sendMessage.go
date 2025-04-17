@@ -105,6 +105,7 @@ var sendMessage = `
 <body>
     <div class="container">
         <h1>Send a Message to a friend</h1>
+        <p>Start a conversation in seconds and stay connected, no matter the distance.</p>
         <form method="POST" action="/form">
             <div class="input-group">
                 <label for="message">Your Message:</label>
@@ -114,7 +115,7 @@ var sendMessage = `
         </form>
 
         {{if .Message}}
-        <p class="success-message">Your message, {{.Message}}, has been successfully sent to your friend!</p>
+        <p class="success-message">Your message, {{.Message}}, has been successfully sent to {{.Friend}}.</p>
         {{end}}
     </div>
 </body>
@@ -124,6 +125,7 @@ var sendMessage = `
 type Message struct {
 	Message string
     UI template.HTML
+    Friend string
 }
 
 // Handler function to serve the form and process submissions
@@ -161,8 +163,23 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
 		clickedUser, err := utils.GetLastUserClicked(db)
 		utils.CatchError(err)
-		
+
+        clickedUsername := utils.GetUsernameFromClickedTable(db, clickedUser)
+        for _, n := range clickedUsername {
+            msg := Message {
+                Friend: n,
+                Message: msg.Message,
+            }
+
+            t, err := template.New("").Parse(sendMessage)
+            if err != nil {
+                http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                return
+            }
+            t.Execute(w, msg)
+        }
 		utils.InsertMessage(db, loggedInUser, clickedUser, msg.Message, timeAndDate)
+        return
 	}
 	tmpl.Execute(w, msg)
 }
