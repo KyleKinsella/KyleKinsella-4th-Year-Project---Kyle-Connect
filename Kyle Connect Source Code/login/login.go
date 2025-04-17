@@ -10,21 +10,17 @@ import (
 	"testing/makeAccount"
 	"testing/ui"
 	"testing/utils"
-    // "strings"
 )
 
 var (
     sendFriendRequest = "http://localhost:8082/actions/addFriend.go"
     sendMessageToFriend = "http://localhost:8083/sendMessage/sendMessage.go"
     createServer = "http://localhost:8084/createServer/createServer.go"
-    sendMessageToServerPlusChannel = "http://localhost:8088/sendMessageToChannelInServer.go"
+    sendMessageToServerPlusChannel = "http://localhost:8088/sendMessageToChannelInServer/sendMessageToChannelInServer.go"
     addFriend = "http://localhost:8086/addFriendToServer/addFriendToServer.go"
     removeFriend = "http://localhost:8087/deleteFriendFromServer/deleteFriendFromServer.go"
 
-	// newUrl = strings.Replace(sendFriendRequest, "8081", "8082", 1) // replace first occurrence
-
     tasks = []string {
-        // newUrl,
         sendFriendRequest,
         sendMessageToFriend,
         createServer,
@@ -155,7 +151,6 @@ type User struct {
     UI template.HTML
     ServerName string
     Channels []string
-
     Channel string
 }
 
@@ -173,32 +168,30 @@ func convertIntToString(id int) string {
 }
 
 func redir(w http.ResponseWriter, newPage string, n string) {   
-
-
-    h := `
-      <html>
-  <head>
+    data := `
+    <html>
+    <head>
     <style>
-      ul.test {
+    ul.test {
         list-style-type: none; /* Removes the dots */
         padding: 0;
         margin: 0;
-      }
+    }
 
-      ul.test li {
+    ul.test li {
         margin: 5px 0;
         padding-left: 15px; /* Moves the link to the right */
-      }
+    }
 
-      ul.test li a {
+    ul.test li a {
         text-decoration: none;
         color: #007BFF;
         font-weight: bold;
-      }
+    }
 
-      ul.test li a:hover {
+    ul.test li a:hover {
         text-decoration: underline;
-      }
+    }
     </style>
   </head>
   <body>
@@ -207,28 +200,18 @@ func redir(w http.ResponseWriter, newPage string, n string) {
     </ul>
   </body>
 </html>
+`
 
-    `
-    
-    
-    html := fmt.Sprintf(h, newPage, n)
+    html := fmt.Sprintf(data, newPage, n)
     w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }
 
-// func v() {
-//     url := "http://localhost:8081/actions/addFriend.go"
-// 	newUrl := strings.Replace(url, "8081", "8082", 1) // replace first occurrence
-
-// 	fmt.Println("Original URL:", url)
-// 	fmt.Println("Updated URL:", newUrl)
-// }
-
 func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans { 
     var input = `
-   <html>
-<head>
+    <html>
+    <head>
     <style>
         /* General Body Styling */
         body {
@@ -325,12 +308,10 @@ func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans {
             <input type="submit" value="Submit Answer">
         </form>
     </div>
-
 </body>
 </html>
+`
 
-    `
-    
     // Initialize form data
     user := Ans{}
 
@@ -390,8 +371,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
         s := utils.RetrieveEmail(db, userData.Email)
         fmt.Println("value of s is:", s)
-        // AcceptOrDecline(db, w, r, userData, "Tina") // this string is the logged in user (I am having some issues with it!)
-        AcceptOrDecline(db, w, r, userData, "Martin") // this string is the logged in user (I am having some issues with it!)
+        AcceptOrDecline(db, w, r, userData, s) // this string is the logged in user (I am having some issues with it!)
 
         hashedPassword, err := utils.RetrieveDataFromDb(db, userData.Email)  
         if err != nil {
@@ -427,7 +407,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             redir(w, tasks[0], "Add friend (Send Friend Request)")
             redir(w, tasks[1], "Send message to a friend")
             redir(w, tasks[2], "Create a server")
-            redir(w, tasks[3], "Send message to a Channel (Server)")
 
             t, err = template.New("UI").Parse(ui.Line)
             if err != nil {
@@ -438,8 +417,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             // Prepare servers template
             var servers = `
-
             <style>
+
             body {
                 background-color: #a7b1c5;
             }
@@ -494,14 +473,13 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             <div class="servers-container">
                 <h3 class="servers-title">Servers</h3>
-                <p class="servers-description">Below are all of your servers that you have created.</p>
+                <p class="servers-description">Below are all of your servers that you have created:</p>
                 <ul class="servers-list">
                     {{range .}}
                         <li><a href="/serverClicked/{{.}}" class="server-link">{{.}}</a></li>                                  
                     {{end}}
                 </ul>
             </div>
-
             `
             
             // Parse the servers template
@@ -532,8 +510,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             for _, n := range ownerOfServer {
                 // s is the logged-in user 
                 if s == n {
-                    // Parse the TEST ui/ui.go TEST variable
-                    t, err = template.New("TEST").Parse(ui.TEST)
+                    // Parse the TEST ui/ui.go Admin variable
+                    t, err = template.New("").Parse(ui.Admin)
                     if err != nil {
                         http.Error(w, "Template parsing error", http.StatusInternalServerError)
                         return
@@ -546,6 +524,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 }
             }
 
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
             // peopleWhoOwnAServer := utils.GetOwnerOfServer(db)
             // fmt.Println("peopleWhoOwnAServer:", peopleWhoOwnAServer)
 
@@ -563,10 +542,10 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             //         utils.ChannelMessagesBeingParsed(db, w)
             //     }
             // }
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
 
             // Prepare serversYouHaveBeenAddedTo template
             var serversYouHaveBeenAddedTo = `
-
             <style>
             .servers-container {
                 max-width: 600px;
@@ -616,10 +595,9 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             </style>
 
-
             <div class="servers-container">
                 <h3 class="servers-title">Servers you have been added to</h3>
-                <p>Below are all of the servers you have been added to.</p>
+                <p>Below are all of the servers you have been added to:</p>
                 <ul>
                     {{range .}}
                         <li>{{.}}</li>                    
@@ -643,8 +621,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             // Prepare messagesRecieved template
             var messagesRecieved = `
-
             <style>
+
             .servers-container {
                 max-width: 600px;
                 margin: 2rem auto;
@@ -695,7 +673,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             <div class="servers-container">
                 <h3 class="servers-title">Messages</h3>
-                <p>Below are all of your messages.</p>
+                <p>Below are all of your messages:</p>
                 <ul>
                     {{range .}}
                         <pre>{{.}}</pre>                    
@@ -720,8 +698,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             // Prepare friendsHTML template
             var friendsHTML = `
-            
             <style>
+
             .servers-container {
                 max-width: 600px;
                 margin: 2rem auto;
@@ -772,7 +750,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             <div class="servers-container">
                 <h3 class="servers-title">Friends</h3>
-                <p class="friendsLi">Below are all of your friends.</p>
+                <p class="friendsLi">Below are all of your friends:</p>
                 <ul>
                     {{range .}}
                         <li><a href="/friend/{{.}}">{{.}}</a></li>                    
@@ -866,7 +844,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
                 <div class="servers-container">
                     <h3 class="servers-title">Pending Friend Requests</h3>
-                    <p class="friendsLi">Below are the people who sent you friend requests.</p>                    
+                    <p class="friendsLi">Below are the people who sent you friend requests:</p>                    
                     <ul>
                         {{range .}}
                             <li>{{.}}</li> 
@@ -885,7 +863,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                     http.Error(w, "Template execution error", http.StatusInternalServerError)
                     return
                 }  
-                // AcceptOrDecline(db, w, r, userData, "Martin") // this string is the logged in user (I am having some issues with it!)
                 return
             } 
             return // stop the rendering of the login page
@@ -959,8 +936,6 @@ func AcceptOrDecline(db *sql.DB, w http.ResponseWriter, r *http.Request, f User,
 func main() {
     // Set up the route and handler for the form
     http.HandleFunc("/", formHandler)
-
-    // v()
     
     db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
     // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
@@ -973,42 +948,70 @@ func main() {
     })
 
     var sn string
+    var msgInChan []string
 
     http.HandleFunc("/serverClicked/", func(w http.ResponseWriter, r *http.Request) {
         serverName := r.URL.Path[len("/serverClicked/"):]
-        channelsInServer := utils.GetChannelsInServer(db, serverName)
+        // channelsInServer := utils.GetChannelsInServer(db, serverName)
+        // fmt.Println("channelsInServer.............................................", channelsInServer)
 
         sn = serverName
 
-        user := User{
-            ServerName: serverName,
-            Channels: channelsInServer,
+        serverIdFromServerName := utils.GetServerIdFromServerName(db, sn)
+        fmt.Println("serverIdFromServerName:", serverIdFromServerName)
+
+        lastServerId, _ := utils.GetServerId(db)
+        c := convertIntToString(lastServerId)
+
+        for _, n := range serverIdFromServerName {
+
+            if n != c {
+                fmt.Println("server id", n, "is not equal to, server id", c)
+
+                // t, err := template.New("").Parse(ui.ThereIsNoChannelsInThisServer)
+                // if err != nil {
+                //     http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                //     return
+                // }
+                // t.Execute(w, nil)
+                return // dont show the channels!
+            }
+
+            if n == c {
+                channelsInServer := utils.GetChannelsInServer(db, serverName)
+                fmt.Println("channelsInServer.............................................", channelsInServer, "this code has executed:::::::::")    
+                
+                user := User{
+                    ServerName: serverName,
+                    Channels: channelsInServer,
+                }
+        
+                // Prepare channelsInServerTemplate template
+                var channelsInServerTemplate = `
+                <div class="fri">
+                    <h3 class="serversYouHaveBeenAddedTo">Here are all of the Channel's that are in: {{.ServerName}}.</h3>
+                    <p></p>
+                    <ul>
+                        {{range .Channels}}
+                            <li><a href="/channelClicked/{{.}}">{{.}}</a></li>                    
+                        {{end}}
+                    </ul>
+                </div>
+                `
+        
+                // Parse the channelsInServerTemplate template
+                t, err := template.New("channelsInServerTemplate").Parse(channelsInServerTemplate)
+                if err != nil {
+                    http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                    return
+                }
+        
+                if err := t.Execute(w, user); err != nil {
+                    http.Error(w, "Template execution error", http.StatusInternalServerError)
+                    return
+                }  
+            }
         }
-
-        // Prepare channelsInServerTemplate template
-        var channelsInServerTemplate = `
-        <div class="fri">
-            <h3 class="serversYouHaveBeenAddedTo">Here are all of the Channel's that are in {{.ServerName}}.</h3>
-            <p></p>
-            <ul>
-                {{range .Channels}}
-                    <li><a href="/channelClicked/{{.}}">{{.}}</a></li>                    
-                {{end}}
-            </ul>
-        </div>
-        `
-
-        // Parse the channelsInServerTemplate template
-        t, err := template.New("channelsInServerTemplate").Parse(channelsInServerTemplate)
-        if err != nil {
-            http.Error(w, "Template parsing error", http.StatusInternalServerError)
-            return
-        }
-
-        if err := t.Execute(w, user); err != nil {
-            http.Error(w, "Template execution error", http.StatusInternalServerError)
-            return
-        }  
     })
 
     http.HandleFunc("/channelClicked/", func(w http.ResponseWriter, r *http.Request) {
@@ -1017,13 +1020,60 @@ func main() {
 
         // this is the server name you clicked on
         fmt.Println("SN:", sn)
+
+        
+
+        // if channelName != sn {
+        //     fmt.Println(channelName, "is not in ", sn)
+        // } else {
+        //     fmt.Println(channelName, "is in ", sn)
+        // }
         
         // gets a server id depending on what you clicked on for (sn above)
         serverIdFromServerName := utils.GetServerIdFromServerName(db, sn)
         fmt.Println("serverIdFromServerName:", serverIdFromServerName)
 
 
+        lastServerId, _ := utils.GetServerId(db)
+
+        c := convertIntToString(lastServerId)
+
         for _, n := range serverIdFromServerName {
+
+            if n != c {
+                fmt.Println("server id", n, "is not equal to, server id", c)
+
+                uuu := User{
+                    Channel: channelName,
+                    Channels: msgInChan,
+                }
+    
+                // Prepare serversYouHaveBeenAddedTo template
+                var serversYouHaveBeenAddedTo = `
+                <div class="fri">
+                    <h3 class="serversYouHaveBeenAddedTo">Messages sent to this channel: {{.ServerName}} {{.Channel}}</h3>
+                    <p></p>
+                    <ul>
+                        {{range .Channels}}
+                            <pre>{{.}}</pre>                    
+                        {{end}}
+                    </ul>
+                </div>
+                `
+
+                // Parse the serversYouHaveBeenAddedTo template
+                t, err := template.New("serversYouHaveBeenAddedTo").Parse(serversYouHaveBeenAddedTo)
+                if err != nil {
+                    http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                    return
+                }
+
+                if err := t.Execute(w, uuu); err != nil {
+                    http.Error(w, "Template execution error", http.StatusInternalServerError)
+                    return
+                }  
+            }
+
             num, err := strconv.Atoi(n)
             utils.CatchError(err)
         
@@ -1037,8 +1087,6 @@ func main() {
                 fmt.Println("n2:", n2, "\n")
             }
 
-            // msgInChan = utils.SelectSenderAndContent(db)
-            
             uuu := User{
                 Channel: channelName,
                 Channels: msgInChan,
@@ -1064,73 +1112,15 @@ func main() {
                 return
             }
 
-            // addedTo := utils.AddedToServer(db, "Ethan") // come back to the hard-coded bit later on!!!!!!!
-            
-            // below works but this is shown everywhere!!!!::: //
-            // msgInChan = utils.SelectSenderAndContent(db)
-            // fmt.Println("TESTING:", msgInChan)
-
-            // if num == 
-
-            // for _, m := range msgInChan {
-            //     if m == num {
-
-            //     }
-            // }
-
-            // was msgInChan: //
             if err := t.Execute(w, uuu); err != nil {
                 http.Error(w, "Template execution error", http.StatusInternalServerError)
                 return
             }  
-
-            // utils.ChannelMessagesBeingParsed(db, w)
+            redir(w, tasks[3], "Send a message to this Channel")
         }
-
-
-        // for i:=0; i<len(f); i++ {
-        //     msgInChan := utils.GetMessagesInChannel(db, i)
-        //     fmt.Println("msgInChan:", msgInChan)
-        // }
-
-        // msgInChan := utils.GetMessagesInChannel(db, 22)
-        // fmt.Println("msgInChan:", msgInChan)
-
-        // for _, n := range msgInChan {
-            // fmt.Println(n, "\n")
-        // }
-
-
-        // serverName := r.URL.Path[len("/serverClicked/"):]
-
-        
-        // serverName := r.URL.Path[len("/serverClicked/"):]
-        // fmt.Println("server name:", serverName)
-
-
-
-
-
-
-        // fmt.Println("SN:", sn)
-
-        // f := utils.Test(db, sn)
-        // fmt.Println("f:", f)
     })
-
-
-    // usernames := utils.GetCommunicatorsUsernames(db)
-    // for _, n := range usernames {
-    //     fmt.Println("username that are in my database are:", n)
-    // }
 
     // Start the HTTP server
     fmt.Println("Server started at http://localhost:8081")
     log.Fatal(http.ListenAndServe(":8081", nil))
-
-    // usernames := utils.GetCommunicatorsUsernames(db)
-
-    // for _, n := range usernames {
-    //     fmt.Println("username that are in my database are:", n)
-    // }
 }

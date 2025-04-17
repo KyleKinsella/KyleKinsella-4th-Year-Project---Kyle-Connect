@@ -25,7 +25,7 @@ var UI = `
 `
 
 var Line = `
-    <br><br><br>
+    <br><br>
     <hr class="dashed">
 `
 
@@ -201,7 +201,7 @@ var Removing = `
 //     <a href="deleteFriendFromServer/deleteFriendFromServer.go">Delete Friend From Server</a> 
 // `
 
-var TEST = `
+var Admin = `
     <h3>You created the above servers to add and delete friends.</h3>
 
     <style>

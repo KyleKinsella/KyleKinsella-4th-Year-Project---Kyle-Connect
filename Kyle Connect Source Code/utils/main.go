@@ -630,7 +630,7 @@ func GetChannelsInServer(db *sql.DB, serverName string) []string {
 func GetMessagesInChannel(db *sql.DB, serverId int) []string {
 	var messagesInchannel []string
 
-	rows, err := db.Query("SELECT content FROM channelmessages WHERE serverId = ?", serverId)
+	rows, err := db.Query("SELECT sender, content, timestamp FROM channelmessages WHERE serverId = ?", serverId)
 	if err != nil {
 		fmt.Println("an error has occured when executing query!")	
 	}
@@ -638,10 +638,19 @@ func GetMessagesInChannel(db *sql.DB, serverId int) []string {
 
 	for rows.Next() {
 		var msgInChan string 
-		if err := rows.Scan(&msgInChan); err != nil {
+		var sender string
+		var timestamp string
+		if err := rows.Scan(&msgInChan, &sender, &timestamp); err != nil {
 			fmt.Println("error scanning row:", err)
 		}
-		messagesInchannel = append(messagesInchannel, msgInChan)
+
+		timestampStr := timestamp
+		if parsedTime, err := time.Parse("2006-01-02 15:04:05 MST", timestampStr); err == nil {
+			timestampStr = parsedTime.Format("Jan 02, 15:04")
+		}
+
+		formattedMessage := fmt.Sprintf("%s (%s):\n\n%s\n", msgInChan, timestampStr, sender)
+		messagesInchannel = append(messagesInchannel, formattedMessage)
 	}
 
 	if err = rows.Err(); err != nil {
