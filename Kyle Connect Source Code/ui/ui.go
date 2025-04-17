@@ -898,3 +898,183 @@ var CannotDeleteNobodyFromAServer = `
 		<a href="http://localhost:8087/deleteFriendFromServer/deleteFriendFromServer.go"><button class="btn">Try Again</button></a>
 	</div>
 `
+
+var ThereIsNoChannelsInThisServer = `
+    <style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background: linear-gradient(to right, #141e30, #243b55);
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .container {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 400px;
+    }
+
+    h1 {
+        margin-bottom: 10px;
+        font-size: 28px;
+    }
+
+    h3 {
+        margin-bottom: 20px;
+        font-size: 16px;
+        opacity: 0.8;
+        color: black;
+    }
+
+    .input-container {
+        align-items: center;
+        background: white;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        transition: 0.3s ease-in-out;
+        border: 2px solid transparent;
+    }
+
+    .input-container:hover {
+        border-color: #007bff;
+    }
+
+    .icon {
+        margin-right: 10px;
+        color: #007bff;
+        font-size: 18px;
+    }
+
+    input {
+        border: none;
+        outline: none;
+        width: 100%;
+        font-size: 16px;
+        padding: 5px;
+    }
+
+    input:focus {
+        border-bottom: 2px solid #007bff;
+    }
+
+    .btn {
+        background-color: #ff4b4b;
+        color: white;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 18px;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+    .btn:hover {
+        background-color: #d43f3f;
+    }
+	</style>
+
+	<div class="input-container">
+        <h3>No channels have been created in this server yet.</h3>
+		<a href="http://localhost:8085/createChannel/createChannel.go"><button class="btn">Create a Channel</button></a>
+	</div>
+`
+
+var YouCannotSendAFriendRequestToYourself = `
+    <style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background: linear-gradient(to right, #141e30, #243b55);
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .container {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 400px;
+    }
+
+    h1 {
+        margin-bottom: 10px;
+        font-size: 28px;
+    }
+
+    h3 {
+        margin-bottom: 20px;
+        font-size: 16px;
+        opacity: 0.8;
+        color: black;
+    }
+
+    .input-container {
+        align-items: center;
+        background: white;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        transition: 0.3s ease-in-out;
+        border: 2px solid transparent;
+    }
+
+    .input-container:hover {
+        border-color: #007bff;
+    }
+
+    .icon {
+        margin-right: 10px;
+        color: #007bff;
+        font-size: 18px;
+    }
+
+    input {
+        border: none;
+        outline: none;
+        width: 100%;
+        font-size: 16px;
+        padding: 5px;
+    }
+
+    input:focus {
+        border-bottom: 2px solid #007bff;
+    }
+
+    .btn {
+        background-color: #ff4b4b;
+        color: white;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 18px;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+    .btn:hover {
+        background-color: #d43f3f;
+    }
+	</style>
+
+	<div class="input-container">
+        <h3>You cannot send a friend request to yourself!</h3>
+		<a href="http://localhost:8082/actions/addFriend.go"><button class="btn">Back</button></a>
+	</div>
+`

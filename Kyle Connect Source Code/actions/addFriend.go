@@ -246,6 +246,13 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             if loggedInUser == username {
                 fmt.Println("you cannot send a friend reuqest to yourself!")
+
+                t, err := template.New("").Parse(ui.YouCannotSendAFriendRequestToYourself)
+                if err != nil {
+                    http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                    return
+                }
+                t.Execute(w, nil)
                 return
             }
 
