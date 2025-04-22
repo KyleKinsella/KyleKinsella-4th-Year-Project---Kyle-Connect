@@ -329,7 +329,11 @@ func GetMessages(db *sql.DB, id int) []string {
 		}
 		
 		timestampStr := timestamp
-		if parsedTime, err := time.Parse("2006-01-02 15:04:05", timestamp); err == nil {
+		// if parsedTime, err := time.Parse("2006-01-02 15:04:05", timestamp); err == nil {
+		// 	timestampStr = parsedTime.Format("Jan 02, 15:04")
+		// }
+
+		if parsedTime, err := time.Parse(time.RFC3339, timestampStr); err == nil {
 			timestampStr = parsedTime.Format("Jan 02, 15:04")
 		}
 
@@ -644,8 +648,13 @@ func GetMessagesInChannel(db *sql.DB, serverId int) []string {
 			fmt.Println("error scanning row:", err)
 		}
 
+		// timestampStr := timestamp
+		// if parsedTime, err := time.Parse("2006-01-02 15:04:05", timestampStr); err == nil {
+		// 	timestampStr = parsedTime.Format("Jan 02, 15:04")
+		// }
+
 		timestampStr := timestamp
-		if parsedTime, err := time.Parse("2006-01-02 15:04:05 MST", timestampStr); err == nil {
+		if parsedTime, err := time.Parse(time.RFC3339, timestampStr); err == nil {
 			timestampStr = parsedTime.Format("Jan 02, 15:04")
 		}
 

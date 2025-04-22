@@ -208,12 +208,115 @@ func redir(w http.ResponseWriter, newPage string, n string) {
 	w.Write([]byte(html))
 }
 
+// func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans { 
+//     var input = `
+//     <html>
+//     <head>
+//     <style>
+//         /* General Body Styling */
+//         body {
+//             font-family: 'Arial', sans-serif;
+//             background-color: #f4f7fa;
+//             color: #333;
+//             margin: 0;
+//             padding: 0;
+//         }
+
+//         /* Container for the Form */
+//         .kyle {
+//             max-width: 500px;
+//             margin: 2rem auto;
+//             padding: 2rem;
+//             background-color: #ffffff;
+//             border-radius: 8px;
+//             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+//         }
+
+//         /* Heading Style */
+//         .kyle h1 {
+//             font-size: 1.75rem;
+//             color: #111827;
+//             margin-bottom: 1.5rem;
+//             text-align: center;
+//         }
+
+//         /* Label Styling */
+//         label {
+//             font-size: 1rem;
+//             color: #555;
+//             margin-bottom: 0.5rem;
+//             display: block;
+//         }
+
+//         /* Input Field Styling */
+//         input[type="text"] {
+//             width: 100%;
+//             padding: 0.75rem;
+//             margin: 0.5rem 0 1.5rem 0;
+//             border: 1px solid #d1d5db;
+//             border-radius: 4px;
+//             font-size: 1rem;
+//             box-sizing: border-box;
+//         }
+
+//         /* Submit Button Styling */
+//         input[type="submit"] {
+//             background-color: #3b82f6;
+//             color: white;
+//             border: none;
+//             padding: 0.75rem 1.5rem;
+//             border-radius: 4px;
+//             font-size: 1rem;
+//             cursor: pointer;
+//             transition: background-color 0.3s ease;
+//         }
+
+//         /* Submit Button Hover Effect */
+//         input[type="submit"]:hover {
+//             background-color: #2563eb;
+//         }
+
+//         /* For Small Adjustments on Mobile */
+//         @media (max-width: 600px) {
+//             .kyle {
+//                 padding: 1rem;
+//                 width: 90%;
+//             }
+
+//             .kyle h1 {
+//                 font-size: 1.5rem;
+//             }
+
+//             input[type="text"] {
+//                 font-size: 0.9rem;
+//             }
+
+//             input[type="submit"] {
+//                 font-size: 0.9rem;
+//             }
+//         }
+//     </style>
+// </head>
+// <body>
+
+//     <div class="kyle">
+//         <h1>Enter accept or decline for your answer</h1>
+//         <form method="POST" action="/form">    
+//             <label for="kyle">Answer:</label>
+//             <input type="text" id="kyle" name="kyle" placeholder="Enter your answer:" required><br><br>
+
+//             <input type="submit" value="Submit Answer">
+//         </form>
+//     </div>
+// </body>
+// </html>
+// `
+
 func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans { 
     var input = `
     <html>
     <head>
     <style>
-        /* General Body Styling */
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f4f7fa;
@@ -222,61 +325,39 @@ func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans {
             padding: 0;
         }
 
-        /* Container for the Form */
         .kyle {
-            max-width: 500px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 400px;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 10 auto;
+            background: transparent !important;
+            box-shadow: 0 0 12px 3px rgba(70, 120, 180, 0.8) !important;
         }
 
-        /* Heading Style */
         .kyle h1 {
             font-size: 1.75rem;
             color: #111827;
             margin-bottom: 1.5rem;
-            text-align: center;
         }
 
-        /* Label Styling */
-        label {
-            font-size: 1rem;
-            color: #555;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        /* Input Field Styling */
-        input[type="text"] {
-            width: 100%;
-            padding: 0.75rem;
-            margin: 0.5rem 0 1.5rem 0;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 1rem;
-            box-sizing: border-box;
-        }
-
-        /* Submit Button Styling */
-        input[type="submit"] {
+        .answer-button {
             background-color: #3b82f6;
             color: white;
             border: none;
             padding: 0.75rem 1.5rem;
+            margin: 0.5rem;
             border-radius: 4px;
             font-size: 1rem;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
 
-        /* Submit Button Hover Effect */
-        input[type="submit"]:hover {
+        .answer-button:hover {
             background-color: #2563eb;
         }
 
-        /* For Small Adjustments on Mobile */
         @media (max-width: 600px) {
             .kyle {
                 padding: 1rem;
@@ -287,30 +368,26 @@ func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans {
                 font-size: 1.5rem;
             }
 
-            input[type="text"] {
+            .answer-button {
                 font-size: 0.9rem;
-            }
-
-            input[type="submit"] {
-                font-size: 0.9rem;
+                padding: 0.5rem 1rem;
             }
         }
     </style>
-</head>
-<body>
+    </head>
+    <body>
 
     <div class="kyle">
-        <h1>Enter accept or decline for your answer</h1>
-        <form method="POST" action="/form">    
-            <label for="kyle">Answer:</label>
-            <input type="text" id="kyle" name="kyle" placeholder="Enter your answer:" required><br><br>
-
-            <input type="submit" value="Submit Answer">
+        <h1>Please choose your answer</h1>
+        <form method="POST" action="/form">
+            <button type="submit" name="kyle" value="accept" class="answer-button">Accept</button>
+            <button type="submit" name="kyle" value="decline" class="answer-button">Decline</button>
         </form>
     </div>
-</body>
-</html>
-`
+
+    </body>
+    </html>
+    `
 
     // Initialize form data
     user := Ans{}
@@ -342,7 +419,7 @@ func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans {
 }
 
 // Handler function to serve the form and process submissions
-func formHandler(w http.ResponseWriter, r *http.Request) {
+func FormHandler(w http.ResponseWriter, r *http.Request) {
     // Parse the HTML template
     tmpl, err := template.New("form").Parse(account) // might need to do it here!?
     if err != nil {
@@ -351,7 +428,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
     // Initialize form data
     userData := User{}
-
+    
     if r.Method == http.MethodPost {
         // Parse form data
         err := r.ParseForm()
@@ -363,15 +440,15 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         userData.Email = r.FormValue("email")
 		userData.Password = r.FormValue("password")
 
-        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
-        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
+        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
         utils.CatchError(err)
         defer db.Close()
 
         s := utils.RetrieveEmail(db, userData.Email)
         fmt.Println("value of s is:", s)
-        AcceptOrDecline(db, w, r, userData, s) // this string is the logged in user (I am having some issues with it!)
+        AcceptOrDecline(db, w, r, userData, "Martin") // this string is the logged in user (I am having some issues with it!)
 
         hashedPassword, err := utils.RetrieveDataFromDb(db, userData.Email)  
         if err != nil {
@@ -424,13 +501,13 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             }
 
             .servers-container {
-                max-width: 600px;
-                margin: 2rem auto;
+                width: 400px;
                 padding: 1.5rem;
-                background: rgba(255, 255, 255, 0.1);
                 border-radius: 1rem;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                margin: 10px;
+                background: transparent !important;
+                box-shadow: 0 0 12px 3px rgba(70, 120, 180, 0.8) !important;
             }
 
             .servers-title {
@@ -441,14 +518,16 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             .servers-description {
                 font-size: 1rem;
-                color: #6b7280;
+                color: black;
                 margin-bottom: 1.25rem;
             }
 
             .servers-list {
+                display: flex;
                 list-style: none;
                 padding: 0;
                 margin: 0;
+                gap: 10px;
             }
 
             .servers-list li {
@@ -596,7 +675,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             </style>
 
             <div class="servers-container">
-                <h3 class="servers-title">Servers you have been added to</h3>
+                <h3 class="servers-title">Servers Linked to Your Profile</h3>
                 <p>Below are all of the servers you have been added to:</p>
                 <ul>
                     {{range .}}
@@ -935,10 +1014,10 @@ func AcceptOrDecline(db *sql.DB, w http.ResponseWriter, r *http.Request, f User,
 
 func main() {
     // Set up the route and handler for the form
-    http.HandleFunc("/", formHandler)
+    http.HandleFunc("/", FormHandler)
     
-    db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
-    // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+    // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
+    db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
     utils.CatchError(err)
     defer db.Close()
     
@@ -988,6 +1067,79 @@ func main() {
         
                 // Prepare channelsInServerTemplate template
                 var channelsInServerTemplate = `
+                <style>
+
+                body {
+                    background-color: #a7b1c5;
+                }
+                    
+                .fri {
+                    background-color: #f9f9fb;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 12px;
+                    padding: 24px;
+                    max-width: 600px;
+                    width: 600px;
+                    padding: 1.5rem;
+                    border-radius: 1rem;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    background: transparent !important;
+                    box-shadow: 0 0 12px 3px rgba(70, 120, 180, 0.8) !important;
+                    
+                    /* Centering styles */
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                }
+
+                .serversYouHaveBeenAddedTo {
+                    font-size: 1.4rem;
+                    color: #333;
+                    margin-bottom: 16px;
+                }
+
+                .fri ul {
+                    list-style: none;
+                    padding-left: 0;
+                }
+
+                .fri li {
+                    margin-bottom: 10px;
+                }
+
+                .fri a {
+                    display: inline-block;
+                    padding: 10px 16px;
+                    background-color: #4f46e5;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    transition: background-color 0.3s ease;
+                }
+
+                .fri a:hover {
+                    background-color: #4338ca;
+                }
+
+                @media (max-width: 600px) {
+                    .serversYouHaveBeenAddedTo {
+                        font-size: 1.2rem;
+                    }
+
+                    .fri {
+                        padding: 1rem;
+                        width: 90%; /* Make the width more fluid */
+                        margin: 10px;
+                    }
+
+                    .fri a {
+                        font-size: 0.9rem;
+                        padding: 8px 14px;
+                    }
+                }
+                </style>
+
                 <div class="fri">
                     <h3 class="serversYouHaveBeenAddedTo">Here are all of the Channel's that are in: {{.ServerName}}.</h3>
                     <p></p>
@@ -1051,11 +1203,12 @@ func main() {
                 // Prepare serversYouHaveBeenAddedTo template
                 var serversYouHaveBeenAddedTo = `
                 <div class="fri">
-                    <h3 class="serversYouHaveBeenAddedTo">Messages sent to this channel: {{.ServerName}} {{.Channel}}</h3>
-                    <p></p>
-                    <ul>
+                    <h3 class="serversYouHaveBeenAddedTo">
+                        Messages sent to this channel: {{.ServerName}} {{.Channel}}
+                    </h3>
+                    <ul class="message-list">
                         {{range .Channels}}
-                            <pre>{{.}}</pre>                    
+                            <li><pre class="message">{{.}}</pre></li>                    
                         {{end}}
                     </ul>
                 </div>
@@ -1094,6 +1247,13 @@ func main() {
 
             // Prepare serversYouHaveBeenAddedTo template
             var serversYouHaveBeenAddedTo = `
+
+            <style>
+            body {
+                background-color: #a7b1c5;
+            }
+            </style>
+
             <div class="fri">
                 <h3 class="serversYouHaveBeenAddedTo">Messages sent to this channel: {{.ServerName}} {{.Channel}}</h3>
                 <p></p>
