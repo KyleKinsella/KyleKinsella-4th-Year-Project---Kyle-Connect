@@ -7,7 +7,7 @@ var UI = `
     <title>Kyle Connect - Home Page</title>
 </head>
 <body>
-	<h1> Welcome to Kyle Connect, {{.Email}}</h1> <br>
+	<h1>Hi {{.Name}}! Welcome to Kyle Connect</h1> <br>
 
     <hr class="dashed">
 
@@ -25,24 +25,73 @@ var UI = `
 `
 
 var Line = `
-    <br><br>
     <hr class="dashed">
+    <br>
 `
 
 var UIERROR = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Kyle Connect - Home Page</title>
-</head>
-<body>
+    <style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
 
-	<h1> Incorrect Email or Password, try again.</h1>
+    .error-container {
+        text-align: center;
+        background-color: #fff;
+        padding: 40px;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
 
-</body>
-</html>
+    .error-message {
+        color: #dc3545;
+        font-size: 22px;
+        margin-bottom: 20px;
+    }
+
+    .back-button {
+        padding: 10px 20px;
+        background-color: #dc3545;
+        color: white;
+        font-size: 16px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .back-button:hover {
+        background-color: #c82333;
+    }
+
+    a {
+        color: black;
+        text-decoration: none;
+    }
+    </style>
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Kyle Connect - Home Page</title>
+    </head>
+    <body>
+        <div class="error-container">
+            <h3>The Email or Password you entered is incorrect.</h3>
+            <button class="back-button">
+                <a href="http://localhost:8081/login/login.go">Try again</a>
+            </button>
+        </div>
+    </body>
+    </html>
 `
-
 
 var FriendRequestAccepted = `
 	<p> You have accepted the friend request. Your friends list will update now.</p>
@@ -55,8 +104,8 @@ var FriendRequestDeclined = `
 var FriendsAddedToServer = `
     <div class="error-container">
         <div class="button-wrapper">
-        <h3>The friends you selected have been added to your selected server.</h3>
-        <button class="back-button">
+            <h3>The friends you selected have been added to your selected server.</h3>
+            <button class="back-button">
                 <a href="http://localhost:8086/addFriendToServer/addFriendToServer.go">Back</a>
             </button>
         </div>
@@ -202,7 +251,7 @@ var Removing = `
 // `
 
 var Admin = `
-    <h3>You created the above servers to add and delete friends.</h3>
+    <h3>You're the admin of the servers you created and can manage friends. <br> </h3>
 
     <style>
         h3 {
@@ -210,6 +259,8 @@ var Admin = `
         }
     </style>
 `
+
+var BR = `<br>`
 
 var ThisUserNameIsAlreadyTaken = `
 	<style>

@@ -152,6 +152,7 @@ type User struct {
     ServerName string
     Channels []string
     Channel string
+    Name string
 }
 
 type Ans struct {
@@ -208,183 +209,455 @@ func redir(w http.ResponseWriter, newPage string, n string) {
 	w.Write([]byte(html))
 }
 
-// func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans { 
-//     var input = `
-//     <html>
-//     <head>
-//     <style>
-//         /* General Body Styling */
-//         body {
-//             font-family: 'Arial', sans-serif;
-//             background-color: #f4f7fa;
-//             color: #333;
-//             margin: 0;
-//             padding: 0;
-//         }
+func KyleConnect(db *sql.DB, w http.ResponseWriter, s string, userData User) {
+    data := User {
+        Name: s,
+        Email: userData.Email,
+        UI: template.HTML(ui.UI),
+    }
 
-//         /* Container for the Form */
-//         .kyle {
-//             max-width: 500px;
-//             margin: 2rem auto;
-//             padding: 2rem;
-//             background-color: #ffffff;
-//             border-radius: 8px;
-//             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-//         }
+    t, err := template.New("UI").Parse(ui.UI)
+    if err != nil {
+        http.Error(w, "Template parsing error", http.StatusInternalServerError)
+        return
+    }
 
-//         /* Heading Style */
-//         .kyle h1 {
-//             font-size: 1.75rem;
-//             color: #111827;
-//             margin-bottom: 1.5rem;
-//             text-align: center;
-//         }
+    if err := t.Execute(w, data); err != nil {
+        http.Error(w, "Template execution error", http.StatusInternalServerError)
+        return
+    }
 
-//         /* Label Styling */
-//         label {
-//             font-size: 1rem;
-//             color: #555;
-//             margin-bottom: 0.5rem;
-//             display: block;
-//         }
+    redir(w, tasks[0], "Add friend (Send Friend Request)")
+    redir(w, tasks[1], "Send message to a friend")
+    redir(w, tasks[2], "Create a server")
 
-//         /* Input Field Styling */
-//         input[type="text"] {
-//             width: 100%;
-//             padding: 0.75rem;
-//             margin: 0.5rem 0 1.5rem 0;
-//             border: 1px solid #d1d5db;
-//             border-radius: 4px;
-//             font-size: 1rem;
-//             box-sizing: border-box;
-//         }
+    t, err = template.New("UI").Parse(ui.Line)
+    if err != nil {
+        http.Error(w, "Template parsing error", http.StatusInternalServerError)
+        return
+    }
+    t.Execute(w, t)
 
-//         /* Submit Button Styling */
-//         input[type="submit"] {
-//             background-color: #3b82f6;
-//             color: white;
-//             border: none;
-//             padding: 0.75rem 1.5rem;
-//             border-radius: 4px;
-//             font-size: 1rem;
-//             cursor: pointer;
-//             transition: background-color 0.3s ease;
-//         }
+    ownerOfServer := utils.GetOwnerOfServer(db)
+    for _, n := range ownerOfServer {
+        // s is the logged-in user 
+        if s == n {
+            // Parse the TEST ui/ui.go Admin variable
+            t, err = template.New("").Parse(ui.Admin)
+            if err != nil {
+                http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                return
+            }
+            t.Execute(w, nil)
 
-//         /* Submit Button Hover Effect */
-//         input[type="submit"]:hover {
-//             background-color: #2563eb;
-//         }
+            redir(w, tasks[4], "Add friends to server")
+            redir(w, tasks[5], "Delete friends from server")
 
-//         /* For Small Adjustments on Mobile */
-//         @media (max-width: 600px) {
-//             .kyle {
-//                 padding: 1rem;
-//                 width: 90%;
-//             }
+            t, err = template.New("").Parse(ui.BR)
+            if err != nil {
+                http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                return
+            }
+            t.Execute(w, nil)
+        }
+    }
 
-//             .kyle h1 {
-//                 font-size: 1.5rem;
-//             }
+var servers = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-//             input[type="text"] {
-//                 font-size: 0.9rem;
-//             }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #a7b1c5;
+        }
 
-//             input[type="submit"] {
-//                 font-size: 0.9rem;
-//             }
-//         }
-//     </style>
-// </head>
-// <body>
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-//     <div class="kyle">
-//         <h1>Enter accept or decline for your answer</h1>
-//         <form method="POST" action="/form">    
-//             <label for="kyle">Answer:</label>
-//             <input type="text" id="kyle" name="kyle" placeholder="Enter your answer:" required><br><br>
+        .welcome-banner {
+            text-align: center;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            margin-bottom: 20px;
+        }
 
-//             <input type="submit" value="Submit Answer">
-//         </form>
-//     </div>
-// </body>
-// </html>
-// `
+        .content-row {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            flex: 1;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 0 12px 3px rgba(70, 120, 180, 0.8);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 4px 16px 4px rgba(70, 120, 180, 0.8);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            color: #111827;
+            margin-bottom: 0.75rem;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 8px;
+        }
+
+        .card-description {
+            font-size: 1rem;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .servers-list {
+            display: flex;
+            flex-wrap: wrap;
+            list-style: none;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .server-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+        }
+
+        .server-link:hover {
+            background-color: #2563eb;
+            transform: scale(1.05);
+        }
+
+        ul {
+            list-style-position: inside;
+            margin-top: 10px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        pre {
+            padding: 8px;
+            border-radius: 4px;
+            font-family: inherit;
+            white-space: pre-wrap;
+        }
+
+        /* Mobile and Tablet Responsive */
+        @media (max-width: 900px) {
+            .content-row {
+                flex-direction: column;
+            }
+
+            .card {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+
+            .welcome-banner {
+                padding: 15px;
+            }
+
+            body {
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .card-title {
+                font-size: 1.25rem;
+            }
+
+            .card-description {
+                font-size: 0.9rem;
+            }
+
+            .server-link {
+                padding: 0.4rem 0.8rem;
+            }
+        }
+        </style>
+
+    </head>
+    <body>
+    <div class="dashboard-container">
+        <div class="content-row">
+            <div class="card">
+                <h3 class="card-title">Servers</h3>
+                <p class="card-description">Below are all of your servers that you have created:</p>
+                <ul class="servers-list">
+                    {{range .}}
+                        <li><a href="/serverClicked/{{.}}" class="server-link">{{.}}</a></li>                                  
+                    {{end}}
+                </ul>
+            </div>
+        </div>
+`
+
+        // Parse the servers template
+        t, err = template.New("").Parse(servers)
+        if err != nil {
+            http.Error(w, "Template parsing error", http.StatusInternalServerError)
+            return
+        }
+        
+        loggedInId, _ := utils.GetLastUserLoggedIn(db)
+        converted := convertIntToString(loggedInId)
+        emailFromId, _ := utils.RetrieveEmailFromId(db, converted)
+
+        name := utils.RetrieveEmail(db, emailFromId)
+        srs := utils.Servers(db, name)
+
+        if err := t.Execute(w, srs); err != nil {
+            http.Error(w, "Template execution error", http.StatusInternalServerError)
+            return
+        }  
+                
+var serversYouHaveBeenAddedTo = `
+        <div class="content-row">
+            <div class="card">
+                <h3 class="card-title">Servers Linked to Your Profile</h3>
+                <p class="card-description">Below are all of the servers you have been added to:</p>
+                <ul>
+                    {{range .}}
+                        <li>{{.}}</li>                    
+                    {{end}}
+                </ul>
+            </div>
+            `
+
+            // Parse the serversYouHaveBeenAddedTo template
+            t, err = template.New("").Parse(serversYouHaveBeenAddedTo)
+            if err != nil {
+                http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                return
+            }
+
+            addedTo := utils.AddedToServer(db, s)
+            if err := t.Execute(w, addedTo); err != nil {
+                http.Error(w, "Template execution error", http.StatusInternalServerError)
+                return
+            }  
+            
+var Messages = `
+        <div class="card">
+            <h3 class="card-title">Messages</h3>
+            <p class="card-description">Below are all of your messages:</p>
+            <ul>
+                {{range .}}
+                    <pre>{{.}}</pre>                    
+                {{end}}
+            </ul>
+        </div>
+`
+
+        // Parse the messagesRecieved template
+        t, err = template.New("").Parse(Messages)
+        if err != nil {
+            http.Error(w, "Template parsing error", http.StatusInternalServerError)
+            return
+        }
+
+        id, _ := utils.GetLastUserClicked(db)
+        messages := utils.GetMessages(db, id)
+        if err := t.Execute(w, messages); err != nil {
+            http.Error(w, "Template execution error", http.StatusInternalServerError)
+            return
+        }     
+
+        var Friends = `
+        <div class="content-row">
+            <div class="card">
+                <h3 class="card-title">Friends</h3>
+                <p class="card-description">Below are all of your friends:</p>
+                <ul>
+                    {{range .}}
+                        <li><a href="/friend/{{.}}">{{.}}</a></li>                    
+                    {{end}}
+                </ul>
+            </div>
+        </div>
+        `
+
+        // Parse the friendsHTML template
+        t, err = template.New("").Parse(Friends)
+        if err != nil {
+            http.Error(w, "Template parsing error", http.StatusInternalServerError)
+            return
+        }
+
+        user := utils.RetrieveEmail(db, userData.Email)
+        utils.InsertLoggedInUserToTable(db, user, userData.Email)
+
+        friends := utils.GetFriends(db, user)
+        friends2 := utils.GetFriends2(db, user)
+
+        var totalFriends []string
+        totalFriends = append(totalFriends, friends...)
+        totalFriends = append(totalFriends, friends2...)
+
+        if err := t.Execute(w, totalFriends); err != nil {
+            http.Error(w, "Template execution error", http.StatusInternalServerError)
+            return
+        }
+
+
+    value, _ := utils.GetToUserName(db, user)
+
+    const status = "pending"
+    logged, to, stat := utils.GetPendingRequestsForLoggedInUser(db, user, value, status)
+    fmt.Println("value of to variable is:", to, "- (this is a print statement!)")
+
+    if value != "pending" || value == "pending" || stat != "pending" || stat == "pending" {
+        var pendingFriendRequest = `
+        <div class="card">
+            <h3 class="card-title">Pending Friend Requests</h3>
+            <p class="card-description">Below are the people who sent you friend requests:</p>                    
+            <ul>
+                {{range .}}
+                    <li>{{.}}</li>
+                {{end}}
+            </ul>
+        </div>
+        <br><br><br>
+    </body>
+    </html>
+`
+
+        t, err = template.New("").Parse(pendingFriendRequest)
+        if err != nil {
+            http.Error(w, "Template parsing error", http.StatusInternalServerError)
+            return
+        }
+        
+        many := utils.WhoSentFriendRequest(db, logged)
+        if err := t.Execute(w, many); err != nil {
+            http.Error(w, "Template execution error", http.StatusInternalServerError)
+            return
+        }  
+        return
+    }
+}
 
 func GetAnswer(db *sql.DB, w http.ResponseWriter, r *http.Request) Ans { 
     var input = `
     <html>
     <head>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f7fa;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
-
-        .kyle {
-            text-align: center;
-            width: 400px;
-            padding: 1.5rem;
-            border-radius: 1rem;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 10 auto;
-            background: transparent !important;
-            box-shadow: 0 0 12px 3px rgba(70, 120, 180, 0.8) !important;
-        }
-
-        .kyle h1 {
-            font-size: 1.75rem;
-            color: #111827;
-            margin-bottom: 1.5rem;
-        }
-
-        .answer-button {
-            background-color: #3b82f6;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            margin: 0.5rem;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .answer-button:hover {
-            background-color: #2563eb;
-        }
-
-        @media (max-width: 600px) {
-            .kyle {
-                padding: 1rem;
-                width: 90%;
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
             }
 
-            .kyle h1 {
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                padding: 20px;
+                color: #333;
+            }
+
+            .dashboard-container {
+                max-width: 600px;
+                margin: 0 auto;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .card {
+                padding: 1.5rem;
+                border-radius: 1rem;
+                box-shadow: 0 0 12px 3px rgba(70, 120, 180, 0.8);
+            }
+
+            .card-title {
                 font-size: 1.5rem;
+                color: #111827;
+                margin-bottom: 1rem;
+                border-bottom: 2px solid #3b82f6;
+                padding-bottom: 8px;
             }
 
             .answer-button {
-                font-size: 0.9rem;
-                padding: 0.5rem 1rem;
+                background-color: #3b82f6;
+                color: white;
+                border: none;
+                padding: 0.75rem 1.5rem;
+                margin: 0.5rem 0;
+                border-radius: 0.5rem;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
             }
-        }
-    </style>
+
+            .answer-button:hover {
+                background-color: #2563eb;
+            }
+
+            @media (max-width: 600px) {
+                .dashboard-container {
+                    width: 90%;
+                }
+
+                .card-title {
+                    font-size: 1.3rem;
+                }
+
+                .answer-button {
+                    font-size: 0.9rem;
+                    padding: 0.5rem 1rem;
+                }
+            }
+        </style>
     </head>
     <body>
-
-    <div class="kyle">
-        <h1>Please choose your answer</h1>
-        <form method="POST" action="/form">
-            <button type="submit" name="kyle" value="accept" class="answer-button">Accept</button>
-            <button type="submit" name="kyle" value="decline" class="answer-button">Decline</button>
-        </form>
-    </div>
-
+        <div class="dashboard-container">
+            <div class="card">
+                <h1 class="card-title">Would you like to accept or decline this request?</h1>
+                <form method="POST" action="/form">
+                    <button class="answer-button" type="submit" name="kyle" value="accept" class="answer-button">Accept</button>
+                    <button class="answer-button" type="submit" name="kyle" value="decline" class="answer-button">Decline</button>
+                </form>
+            </div>
+        </div>
     </body>
     </html>
     `
@@ -428,7 +701,7 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
 
     // Initialize form data
     userData := User{}
-    
+
     if r.Method == http.MethodPost {
         // Parse form data
         err := r.ParseForm()
@@ -437,27 +710,27 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
             return
         }
 
-        userData.Email = r.FormValue("email")
-		userData.Password = r.FormValue("password")
-
         db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
         // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
         utils.CatchError(err)
         defer db.Close()
 
+        userData.Email = r.FormValue("email")
+		userData.Password = r.FormValue("password")
+
         s := utils.RetrieveEmail(db, userData.Email)
-        fmt.Println("value of s is:", s)
-        AcceptOrDecline(db, w, r, userData, "Martin") // this string is the logged in user (I am having some issues with it!)
+        fmt.Println("value of s is:......", s)
+        // AcceptOrDecline(db, w, r, userData, "Martin") // this string is the logged in user (I am having some issues with it!)
 
         hashedPassword, err := utils.RetrieveDataFromDb(db, userData.Email)  
         if err != nil {
             if err == sql.ErrNoRows {
                 fmt.Println("Email is not in database!")
-            } //else {
-                // fmt.Println("Error retrieving password from database: / this is the or one of the problems", err)
-                // return
-            // }
+            } else {
+                fmt.Println("Error retrieving password from database: / this is the or one of the problems", err)
+                return
+            }
             return
         }
 
@@ -468,140 +741,7 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
 
         if makeAccount.CheckPassword(userData.Password, hashedPassword) {
             fmt.Println("You have logged into your account.")
-            
-            // Parse and execute the template
-            t, err := template.New("UI").Parse(ui.UI)
-            if err != nil {
-                http.Error(w, "Template parsing error", http.StatusInternalServerError)
-                return
-            }
-            
-            if err := t.Execute(w, data); err != nil {
-                http.Error(w, "Template execution error", http.StatusInternalServerError)
-                return
-            }
-
-            redir(w, tasks[0], "Add friend (Send Friend Request)")
-            redir(w, tasks[1], "Send message to a friend")
-            redir(w, tasks[2], "Create a server")
-
-            t, err = template.New("UI").Parse(ui.Line)
-            if err != nil {
-                http.Error(w, "Template parsing error", http.StatusInternalServerError)
-                return
-            }
-            t.Execute(w, t)
-
-            // Prepare servers template
-            var servers = `
-            <style>
-
-            body {
-                background-color: #a7b1c5;
-            }
-
-            .servers-container {
-                width: 400px;
-                padding: 1.5rem;
-                border-radius: 1rem;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                margin: 10px;
-                background: transparent !important;
-                box-shadow: 0 0 12px 3px rgba(70, 120, 180, 0.8) !important;
-            }
-
-            .servers-title {
-                font-size: 1.75rem;
-                color: #111827;
-                margin-bottom: 0.5rem;
-            }
-
-            .servers-description {
-                font-size: 1rem;
-                color: black;
-                margin-bottom: 1.25rem;
-            }
-
-            .servers-list {
-                display: flex;
-                list-style: none;
-                padding: 0;
-                margin: 0;
-                gap: 10px;
-            }
-
-            .servers-list li {
-                margin-bottom: 0.75rem;
-            }
-
-            .server-link {
-                display: inline-block;
-                padding: 0.5rem 1rem;
-                background-color: #3b82f6;
-                color: #fff;
-                border-radius: 0.5rem;
-                text-decoration: none;
-                transition: background-color 0.2s ease-in-out;
-            }
-
-            .server-link:hover {
-                background-color: #2563eb;
-            }
-
-            </style>
-
-            <div class="servers-container">
-                <h3 class="servers-title">Servers</h3>
-                <p class="servers-description">Below are all of your servers that you have created:</p>
-                <ul class="servers-list">
-                    {{range .}}
-                        <li><a href="/serverClicked/{{.}}" class="server-link">{{.}}</a></li>                                  
-                    {{end}}
-                </ul>
-            </div>
-            `
-            
-            // Parse the servers template
-            t, err = template.New("servers").Parse(servers)
-            if err != nil {
-                http.Error(w, "Template parsing error", http.StatusInternalServerError)
-                return
-            }
-
-            loggedInId, err := utils.GetLastUserLoggedIn(db)
-            // utils.CatchError(err)
-            
-            converted := convertIntToString(loggedInId)
-		
-            emailFromId, err := utils.RetrieveEmailFromId(db, converted)
-            // utils.CatchError(err)
-            
-            name := utils.RetrieveEmail(db, emailFromId)
-
-            srs := utils.Servers(db, name)
-
-            if err := t.Execute(w, srs); err != nil {
-                http.Error(w, "Template execution error", http.StatusInternalServerError)
-                return
-            }  
-
-            ownerOfServer := utils.GetOwnerOfServer(db)
-            for _, n := range ownerOfServer {
-                // s is the logged-in user 
-                if s == n {
-                    // Parse the TEST ui/ui.go Admin variable
-                    t, err = template.New("").Parse(ui.Admin)
-                    if err != nil {
-                        http.Error(w, "Template parsing error", http.StatusInternalServerError)
-                        return
-                    }
-
-                    redir(w, tasks[4], "Add friends to server")
-                    redir(w, tasks[5], "Delete friends from server")
-
-                    t.Execute(w, err)
-                }
-            }
+            KyleConnect(db, w, s, userData)
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////
             // peopleWhoOwnAServer := utils.GetOwnerOfServer(db)
@@ -623,330 +763,9 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
             // }
             ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            // Prepare serversYouHaveBeenAddedTo template
-            var serversYouHaveBeenAddedTo = `
-            <style>
-            .servers-container {
-                max-width: 600px;
-                margin: 2rem auto;
-                padding: 1.5rem;
-                background-color: #f9fafb;
-                border-radius: 1rem;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            }
-
-            .servers-title {
-                font-size: 1.75rem;
-                color: #111827;
-                margin-bottom: 0.5rem;
-            }
-
-            .servers-description {
-                font-size: 1rem;
-                color: #6b7280;
-                margin-bottom: 1.25rem;
-            }
-
-            .servers-list {
-                list-style: none;
-                padding: 0;
-                margin: 0;
-            }
-
-            .servers-list li {
-                margin-bottom: 0.75rem;
-            }
-
-            .server-link {
-                display: inline-block;
-                padding: 0.5rem 1rem;
-                background-color: #3b82f6;
-                color: #fff;
-                border-radius: 0.5rem;
-                text-decoration: none;
-                transition: background-color 0.2s ease-in-out;
-            }
-
-            .server-link:hover {
-                background-color: #2563eb;
-            }
-
-            </style>
-
-            <div class="servers-container">
-                <h3 class="servers-title">Servers Linked to Your Profile</h3>
-                <p>Below are all of the servers you have been added to:</p>
-                <ul>
-                    {{range .}}
-                        <li>{{.}}</li>                    
-                    {{end}}
-                </ul>
-            </div>
-            `
-
-            // Parse the serversYouHaveBeenAddedTo template
-            t, err = template.New("serversYouHaveBeenAddedTo").Parse(serversYouHaveBeenAddedTo)
-            if err != nil {
-                http.Error(w, "Template parsing error", http.StatusInternalServerError)
-                return
-            }
-
-            addedTo := utils.AddedToServer(db, s) // come back to the hard-coded bit later on!!!!!!! (FIXED THIS ON: 01/04/2025)
-            if err := t.Execute(w, addedTo); err != nil {
-                http.Error(w, "Template execution error", http.StatusInternalServerError)
-                return
-            }  
-
-            // Prepare messagesRecieved template
-            var messagesRecieved = `
-            <style>
-
-            .servers-container {
-                max-width: 600px;
-                margin: 2rem auto;
-                padding: 1.5rem;
-                background-color: #f9fafb;
-                border-radius: 1rem;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            }
-
-            .servers-title {
-                font-size: 1.75rem;
-                color: #111827;
-                margin-bottom: 0.5rem;
-            }
-
-            .servers-description {
-                font-size: 1rem;
-                color: #6b7280;
-                margin-bottom: 1.25rem;
-            }
-
-            .servers-list {
-                list-style: none;
-                padding: 0;
-                margin: 0;
-            }
-
-            .servers-list li {
-                margin-bottom: 0.75rem;
-            }
-
-            .server-link {
-                display: inline-block;
-                padding: 0.5rem 1rem;
-                background-color: #3b82f6;
-                color: #fff;
-                border-radius: 0.5rem;
-                text-decoration: none;
-                transition: background-color 0.2s ease-in-out;
-            }
-
-            .server-link:hover {
-                background-color: #2563eb;
-            }
-
-            </style>
-
-            <div class="servers-container">
-                <h3 class="servers-title">Messages</h3>
-                <p>Below are all of your messages:</p>
-                <ul>
-                    {{range .}}
-                        <pre>{{.}}</pre>                    
-                    {{end}}
-                </ul>
-            </div>
-            `
-
-            // Parse the messagesRecieved template
-            t, err = template.New("message").Parse(messagesRecieved)
-            if err != nil {
-                http.Error(w, "Template parsing error", http.StatusInternalServerError)
-                return
-            }
-
-            id, err := utils.GetLastUserClicked(db)
-            messages := utils.GetMessages(db, id)
-            if err := t.Execute(w, messages); err != nil {
-                http.Error(w, "Template execution error", http.StatusInternalServerError)
-                return
-            }  
-
-            // Prepare friendsHTML template
-            var friendsHTML = `
-            <style>
-
-            .servers-container {
-                max-width: 600px;
-                margin: 2rem auto;
-                padding: 1.5rem;
-                background-color: #f9fafb;
-                border-radius: 1rem;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            }
-
-            .servers-title {
-                font-size: 1.75rem;
-                color: #111827;
-                margin-bottom: 0.5rem;
-            }
-
-            .servers-description {
-                font-size: 1rem;
-                color: #6b7280;
-                margin-bottom: 1.25rem;
-            }
-
-            .servers-list {
-                list-style: none;
-                padding: 0;
-                margin: 0;
-            }
-
-            .servers-list li {
-                margin-bottom: 0.75rem;
-            }
-
-            .server-link {
-                display: inline-block;
-                padding: 0.5rem 1rem;
-                background-color: #3b82f6;
-                color: #fff;
-                border-radius: 0.5rem;
-                text-decoration: none;
-                transition: background-color 0.2s ease-in-out;
-            }
-
-            .server-link:hover {
-                background-color: #2563eb;
-            }
-
-            </style>
-
-            <div class="servers-container">
-                <h3 class="servers-title">Friends</h3>
-                <p class="friendsLi">Below are all of your friends:</p>
-                <ul>
-                    {{range .}}
-                        <li><a href="/friend/{{.}}">{{.}}</a></li>                    
-                    {{end}}
-                </ul>
-            </div>
-            `
-
-            // Parse the friendsHTML template
-            t, err = template.New("friendsList").Parse(friendsHTML)
-            if err != nil {
-                http.Error(w, "Template parsing error", http.StatusInternalServerError)
-                return
-            }
-
-            user := utils.RetrieveEmail(db, userData.Email)
-            // if er != nil {
-            //     log.Fatal(er)
-            // }
-            utils.InsertLoggedInUserToTable(db, user, userData.Email)
-
-            friends := utils.GetFriends(db, user)
-            friends2 := utils.GetFriends2(db, user)
-
-            var totalFriends []string
-            totalFriends = append(totalFriends, friends...)
-            totalFriends = append(totalFriends, friends2...)
-
-            if err := t.Execute(w, totalFriends); err != nil {
-                http.Error(w, "Template execution error", http.StatusInternalServerError)
-                return
-            }
-
-            value, err := utils.GetToUserName(db, user)
-
-            const status = "pending"
-            logged, to, stat := utils.GetPendingRequestsForLoggedInUser(db, user, value, status)
-            fmt.Println("value of to variable is:", to, "- (this is a print statement!)")
-
-            if value != "pending" || value == "pending" || stat != "pending" || stat == "pending" {
-                var showData = `
-
-                <style>
-                .servers-container {
-                    max-width: 600px;
-                    margin: 2rem auto;
-                    padding: 1.5rem;
-                    background-color: #f9fafb;
-                    border-radius: 1rem;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                }
-
-                .servers-title {
-                    font-size: 1.75rem;
-                    color: #111827;
-                    margin-bottom: 0.5rem;
-                }
-
-                .servers-description {
-                    font-size: 1rem;
-                    color: #6b7280;
-                    margin-bottom: 1.25rem;
-                }
-
-                .servers-list {
-                    list-style: none;
-                    padding: 0;
-                    margin: 0;
-                }
-
-                .servers-list li {
-                    margin-bottom: 0.75rem;
-                }
-
-                .server-link {
-                    display: inline-block;
-                    padding: 0.5rem 1rem;
-                    background-color: #3b82f6;
-                    color: #fff;
-                    border-radius: 0.5rem;
-                    text-decoration: none;
-                    transition: background-color 0.2s ease-in-out;
-                }
-
-                .server-link:hover {
-                    background-color: #2563eb;
-                }
-
-                </style>
-
-                <div class="servers-container">
-                    <h3 class="servers-title">Pending Friend Requests</h3>
-                    <p class="friendsLi">Below are the people who sent you friend requests:</p>                    
-                    <ul>
-                        {{range .}}
-                            <li>{{.}}</li> 
-                        {{end}}
-                    </ul>
-                `
-
-                t, err = template.New("showData").Parse(showData)
-                if err != nil {
-                    http.Error(w, "Template parsing error", http.StatusInternalServerError)
-                    return
-                }
-                
-                many := utils.WhoSentFriendRequest(db, logged)
-                if err := t.Execute(w, many); err != nil {
-                    http.Error(w, "Template execution error", http.StatusInternalServerError)
-                    return
-                }  
-                return
-            } 
             return // stop the rendering of the login page
         } else {
-            t, err := template.New(ui.UIERROR).Parse(ui.UIERROR) 
+            t, err := template.New("").Parse(ui.UIERROR) 
             if err != nil {
                 http.Error(w, "Template parsing error", http.StatusInternalServerError)
                 return
@@ -1310,7 +1129,7 @@ func main() {
 
             fmt.Println("msgInChan:", msgInChan)
             for _, n2 := range msgInChan {
-                fmt.Println("n2:", n2, "\n")
+                fmt.Println("n2:", n2)
             }
 
             uuu := User{
