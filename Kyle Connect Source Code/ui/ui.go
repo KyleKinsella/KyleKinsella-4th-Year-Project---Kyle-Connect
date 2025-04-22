@@ -899,7 +899,7 @@ var CannotDeleteNobodyFromAServer = `
 	</div>
 `
 
-var ThereIsNoChannelsInThisServer = `
+var NoChannelsFound = `
     <style>
     body {
         font-family: 'Arial', sans-serif;
@@ -984,8 +984,8 @@ var ThereIsNoChannelsInThisServer = `
 	</style>
 
 	<div class="input-container">
-        <h3>No channels have been created in this server yet.</h3>
-		<a href="http://localhost:8085/createChannel/createChannel.go"><button class="btn">Create a Channel</button></a>
+        <h3>No channels found for this server.</h3>
+		<a href=""><button class="btn">Back</button></a>
 	</div>
 `
 

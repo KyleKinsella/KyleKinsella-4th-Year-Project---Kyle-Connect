@@ -440,8 +440,8 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
         userData.Email = r.FormValue("email")
 		userData.Password = r.FormValue("password")
 
-        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
-        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
+        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
         utils.CatchError(err)
         defer db.Close()
@@ -1016,14 +1016,87 @@ func main() {
     // Set up the route and handler for the form
     http.HandleFunc("/", FormHandler)
     
-    // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
-    db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+    db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
+    // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
     utils.CatchError(err)
     defer db.Close()
     
     http.HandleFunc("/friend/", func(w http.ResponseWriter, r *http.Request) {
         friendName := r.URL.Path[len("/friend/"):]
         utils.InsertIntoClickedTable(db, friendName) // i have what friend you clicked on!!!!
+    
+        selectedFriend := `
+		<div class="selection-container">
+    		<h1 class="selection-message">You have chosen: <span class="friend-name">%s</span> to chat with!</h1>
+		
+			<button class="back-button">
+        		<a href="http://localhost:8083/sendMessage/sendMessage.go">Begin Conversation</a>
+    		</button>
+
+            <button class="back-button">
+            	<a href="">Back</a>
+    		</button>
+		</div>
+
+		<style>
+		body {
+			background-color: #f0f2f5;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+		}
+
+		.selection-container {
+			text-align: center;
+			padding: 40px;
+			background-color: #fff;
+			border-radius: 12px;
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+			max-width: 600px;
+		}
+
+		.selection-message {
+			font-size: 28px;
+			color: #333;
+		}
+
+		.friend-name {
+			color: #007bff;
+			font-weight: bold;
+		}
+
+		.back-button {
+			padding: 10px 20px;
+			background-color: #007bff   ;
+			color: white;
+			font-size: 16px;
+			border-radius: 6px;
+			border: none;
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+    	}
+
+		.back-button:hover {
+			background-color: #0056b3;
+		}
+
+		.back-button {
+			text-align: center;
+			margin-top: 20px;
+		}
+
+		a {
+        	color: black;
+        	text-decoration: none;
+    	}
+		</style>
+		`
+
+		fmt.Fprintf(w, selectedFriend, friendName)
     })
 
     var sn string
@@ -1047,12 +1120,12 @@ func main() {
             if n != c {
                 fmt.Println("server id", n, "is not equal to, server id", c)
 
-                // t, err := template.New("").Parse(ui.ThereIsNoChannelsInThisServer)
-                // if err != nil {
-                //     http.Error(w, "Template parsing error", http.StatusInternalServerError)
-                //     return
-                // }
-                // t.Execute(w, nil)
+                t, err := template.New("").Parse(ui.NoChannelsFound)
+                if err != nil {
+                    http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                    return
+                }
+                t.Execute(w, nil)
                 return // dont show the channels!
             }
 
