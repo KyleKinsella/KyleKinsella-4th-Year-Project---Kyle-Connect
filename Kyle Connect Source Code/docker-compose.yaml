@@ -1,0 +1,62 @@
+services:
+  main-app:
+    build: .
+    depends_on:
+      - send-friend-request
+      - send-message
+      - login
+      - create-account
+      - add-friend-to-server
+      - welcome-page
+      - send-message-to-channel-in-server
+      - create-channel
+
+  send-friend-request:
+    image: addfriend
+    ports:
+      - "8082:8082"
+
+  send-message:
+    image: sendmessage
+    ports:
+      - "8083:8083"
+
+  login:
+    image: login
+    ports:
+      - "8081:8081"
+
+  create-server:
+    image: createserver
+    ports:
+      - "8084:8084"
+
+  create-account:
+    image: makeaccount
+    ports:
+      - "8080:8080"
+
+  add-friend-to-server:
+    image: addfriendtoserver
+    ports:
+      - "8086:8086"
+
+  delete-friend-from-server:
+    image: deletefriendfromserver
+    ports:
+      - "8087:8087"
+
+  welcome-page:
+    image: welcomepage
+    ports:
+      - "8089:8089"
+
+  send-message-to-channel-in-server:
+    image: sendmessagetochannelinserver
+    ports:
+      - "8088:8088"
+
+  create-channel:
+    image: createchannel
+    ports:
+      - "8085:8085"

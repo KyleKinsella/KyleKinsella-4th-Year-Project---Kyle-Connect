@@ -330,7 +330,7 @@ func GetMessages(db *sql.DB, id int) []string {
 		
 		timestampStr := timestamp
 		// if parsedTime, err := time.Parse("2006-01-02 15:04:05", timestamp); err == nil {
-		// 	timestampStr = parsedTime.Format("Jan 02, 15:04")
+			// timestampStr = parsedTime.Format("Jan 02, 15:04")
 		// }
 
 		if parsedTime, err := time.Parse(time.RFC3339, timestampStr); err == nil {
@@ -657,6 +657,14 @@ func GetMessagesInChannel(db *sql.DB, serverId int) []string {
 		if parsedTime, err := time.Parse(time.RFC3339, timestampStr); err == nil {
 			timestampStr = parsedTime.Format("Jan 02, 15:04")
 		}
+
+		// location, _ := time.LoadLocation("Europe/Dublin")
+		// parsedTime, err := time.Parse(time.RFC3339, timestampStr)
+		// if err == nil {
+		// 	parsedTime = parsedTime.In(location)
+		// 	timestampStr = parsedTime.Format("Jan 02, 15:04")
+		// }
+		
 
 		formattedMessage := fmt.Sprintf("%s (%s):\n\n%s\n", msgInChan, timestampStr, sender)
 		messagesInchannel = append(messagesInchannel, formattedMessage)

@@ -148,12 +148,13 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         }
 
         msg.Message = r.FormValue("message")
+        
+        location, _ := time.LoadLocation("Europe/Dublin")
+        currentTime := time.Now().In(location)
+        timeAndDate := currentTime.Format("2006-01-02 15:04:05")        
 
-		currentTime := time.Now()
-		timeAndDate := currentTime.Format("2006-01-02 15:04:05")
-
-        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
-        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
+        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
         utils.CatchError(err)
         defer db.Close()

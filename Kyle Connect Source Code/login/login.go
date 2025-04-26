@@ -19,6 +19,7 @@ var (
     sendMessageToServerPlusChannel = "http://localhost:8088/sendMessageToChannelInServer/sendMessageToChannelInServer.go"
     addFriend = "http://localhost:8086/addFriendToServer/addFriendToServer.go"
     removeFriend = "http://localhost:8087/deleteFriendFromServer/deleteFriendFromServer.go"
+    createChannel = "http://localhost:8085/createChannel/createChannel.go"
 
     tasks = []string {
         sendFriendRequest,
@@ -27,6 +28,7 @@ var (
         sendMessageToServerPlusChannel,
         addFriend,
         removeFriend,
+        createChannel,
     }
 )
 
@@ -710,8 +712,8 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
             return
         }
 
-        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
-        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
+        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
         utils.CatchError(err)
         defer db.Close()
@@ -721,16 +723,16 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
 
         s := utils.RetrieveEmail(db, userData.Email)
         fmt.Println("value of s is:......", s)
-        // AcceptOrDecline(db, w, r, userData, "Martin") // this string is the logged in user (I am having some issues with it!)
+        AcceptOrDecline(db, w, r, userData, "Monster") // this string is the logged in user (I am having some issues with it!)
 
         hashedPassword, err := utils.RetrieveDataFromDb(db, userData.Email)  
         if err != nil {
             if err == sql.ErrNoRows {
                 fmt.Println("Email is not in database!")
-            } else {
-                fmt.Println("Error retrieving password from database: / this is the or one of the problems", err)
-                return
-            }
+            } //else {
+                // fmt.Println("Error retrieving password from database: / this is the or one of the problems", err)
+                // return
+            // }
             return
         }
 
@@ -742,6 +744,25 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
         if makeAccount.CheckPassword(userData.Password, hashedPassword) {
             fmt.Println("You have logged into your account.")
             KyleConnect(db, w, s, userData)
+
+
+
+            // fmt.Println("r.Host is:", r.Host)
+            // if r.Host == "http://localhost:8081/" || r.Host == "192.168.200.72:8081" { // default dev server
+
+            //     baseURL := "http://localhost:8082"
+            //     i := tasks[0]
+        
+            //     total := baseURL + ":" + i
+            //     fmt.Println("baseURL:", baseURL, "i:", i, "total:", total)
+        
+            //     // http.ListenAndServe(total, nil) // go to login page upon after making your account
+            //     redir(w, total, ".............................")
+            // }
+
+
+
+
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////
             // peopleWhoOwnAServer := utils.GetOwnerOfServer(db)
@@ -835,8 +856,8 @@ func main() {
     // Set up the route and handler for the form
     http.HandleFunc("/", FormHandler)
     
-    db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
-    // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+    // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
+    db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
     utils.CatchError(err)
     defer db.Close()
     
@@ -1054,6 +1075,7 @@ func main() {
                     http.Error(w, "Template execution error", http.StatusInternalServerError)
                     return
                 }  
+                redir(w, tasks[6], "Create a Channel")
             }
         }
     })
