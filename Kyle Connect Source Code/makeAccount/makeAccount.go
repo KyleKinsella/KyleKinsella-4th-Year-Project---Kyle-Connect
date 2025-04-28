@@ -152,7 +152,7 @@ type User struct {
 }
 
 // Handler function to serve the form and process submissions
-func formHandler(w http.ResponseWriter, r *http.Request) {
+func FormHandler(w http.ResponseWriter, r *http.Request) {
     // Parse the HTML template
     tmpl, err := template.New("form").Parse(account)
     if err != nil {
@@ -173,6 +173,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         userData.Username = r.FormValue("name")
         userData.Email = r.FormValue("email")
 		userData.Password = r.FormValue("password")    
+        
         // hash the password
         passwordHashed, err := HashingPassword(userData.Password)
         if err != nil {
@@ -180,9 +181,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             return 
         }
 
-        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
+        db, _ := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
         // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
-        utils.CatchError(err)
 
         usernames := utils.GetCommunicatorsUsernames(db)
         fmt.Println("usernames:", usernames)
@@ -194,24 +194,23 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         if usernames == nil {
             utils.PutDataToDb(db, userData.Username, userData.Email, passwordHashed)
 
-               // Parse and execute the template
-               t, err := template.New("").Parse(ui.YourAccountHasBeenMade)
-               if err != nil {
-                   http.Error(w, "Template parsing error", http.StatusInternalServerError)
-                   return
-               }
-               
-               if err := t.Execute(w, username); err != nil {
-                   http.Error(w, "Template execution error", http.StatusInternalServerError)
-                   return
-               }
-               http.ListenAndServe(":8081", nil) // go to login page upon after making your account
-               return
+            // Parse and execute the template
+            t, err := template.New("").Parse(ui.YourAccountHasBeenMade)
+            if err != nil {
+                http.Error(w, "Template parsing error", http.StatusInternalServerError)
+                return
+            }
+            
+            if err := t.Execute(w, username); err != nil {
+                http.Error(w, "Template execution error", http.StatusInternalServerError)
+                return
+            }
+            return
         }
 
         for _, n := range usernames {
             if n == userData.Username {
-                // fmt.Println("this username is already taken, you cannot make anaccount with this name, try again with a new username")
+                fmt.Println("this username is already taken, you cannot make anaccount with this name, try again with a new username")
                 
                 w.Header().Set("Content-Type", "text/html")
 
@@ -224,8 +223,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                 return
             } 
         }
-
-      
 
         for _, n := range usernames {
             if n != userData.Username {
@@ -242,19 +239,18 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
                     http.Error(w, "Template execution error", http.StatusInternalServerError)
                     return
                 }
-                http.ListenAndServe(":8081", nil) // go to login page upon after making your account
                 return
             }
         }
     }
-
     // Render the HTML template with the form data
     tmpl.Execute(w, userData)
 }
 
 func RunServer() {
-     // Set up the route and handler for the form
-    http.HandleFunc("/", formHandler)
+    // Set up the route and handler for the form
+    http.HandleFunc("/", FormHandler)
+
     // Start the HTTP server
     fmt.Println("Server started at http://localhost:8080")
     log.Fatal(http.ListenAndServe(":8080", nil))

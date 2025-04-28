@@ -230,7 +230,6 @@ func KyleConnect(db *sql.DB, w http.ResponseWriter, s string, userData User) {
     }
 
     redir(w, tasks[0], "Add friend (Send Friend Request)")
-    redir(w, tasks[1], "Send message to a friend")
     redir(w, tasks[2], "Create a server")
 
     t, err = template.New("UI").Parse(ui.Line)
@@ -456,7 +455,7 @@ var servers = `
 var serversYouHaveBeenAddedTo = `
         <div class="content-row">
             <div class="card">
-                <h3 class="card-title">Servers Linked to Your Profile</h3>
+                <h3 class="card-title">Servers you have been added to</h3>
                 <p class="card-description">Below are all of the servers you have been added to:</p>
                 <ul>
                     {{range .}}
@@ -721,18 +720,16 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
         userData.Email = r.FormValue("email")
 		userData.Password = r.FormValue("password")
 
+        // the variable "s" is the logged in user:
         s := utils.RetrieveEmail(db, userData.Email)
         fmt.Println("value of s is:......", s)
-        AcceptOrDecline(db, w, r, userData, "Monster") // this string is the logged in user (I am having some issues with it!)
+        AcceptOrDecline(db, w, r, userData, "test") // this string is the logged in user (I am having some issues with it!)
 
         hashedPassword, err := utils.RetrieveDataFromDb(db, userData.Email)  
         if err != nil {
             if err == sql.ErrNoRows {
                 fmt.Println("Email is not in database!")
-            } //else {
-                // fmt.Println("Error retrieving password from database: / this is the or one of the problems", err)
-                // return
-            // }
+            } 
             return
         }
 
@@ -744,47 +741,7 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
         if makeAccount.CheckPassword(userData.Password, hashedPassword) {
             fmt.Println("You have logged into your account.")
             KyleConnect(db, w, s, userData)
-
-
-
-            // fmt.Println("r.Host is:", r.Host)
-            // if r.Host == "http://localhost:8081/" || r.Host == "192.168.200.72:8081" { // default dev server
-
-            //     baseURL := "http://localhost:8082"
-            //     i := tasks[0]
-        
-            //     total := baseURL + ":" + i
-            //     fmt.Println("baseURL:", baseURL, "i:", i, "total:", total)
-        
-            //     // http.ListenAndServe(total, nil) // go to login page upon after making your account
-            //     redir(w, total, ".............................")
-            // }
-
-
-
-
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////
-            // peopleWhoOwnAServer := utils.GetOwnerOfServer(db)
-            // fmt.Println("peopleWhoOwnAServer:", peopleWhoOwnAServer)
-
-            // peopleAddedToServer := utils.FriendsAddedToServer(db)
-            // fmt.Println("peopleAddedToServer:", peopleAddedToServer)
-
-            // for _, n := range peopleWhoOwnAServer {
-            //     if s == n {
-            //         utils.ChannelMessagesBeingParsed(db, w)
-            //     }
-            // }
-
-            // for _, n := range peopleAddedToServer {
-            //     if s == n {
-            //         utils.ChannelMessagesBeingParsed(db, w)
-            //     }
-            // }
-            ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            return // stop the rendering of the login page
+            return // stop showing the login page
         } else {
             t, err := template.New("").Parse(ui.UIERROR) 
             if err != nil {
@@ -818,19 +775,16 @@ func AcceptOrDecline(db *sql.DB, w http.ResponseWriter, r *http.Request, f User,
 
     testlogged := getLogged
     fmt.Println("value of testlogged is:", testlogged)
-    // getLogged = utils.RetrieveEmail(db, user)
-    // fmt.Println("testlogged here is:", testlogged)
-    // testlogged = getLogged
 
     friend := utils.LoggedInPossibleFriend(db, testlogged)
     fmt.Println("friend:", friend)
     
     if result == "accept" {
         status := "accept"
-        utils.UpdateFriendRequestStatus(db, status, testlogged) // was testname now -> testlogged
+        utils.UpdateFriendRequestStatus(db, status, testlogged)
 
         // here I put user1 and user2 into the friends table
-        utils.PutFriendsToFriendsTable(db, testlogged, friend) // was testlogged now -> testname
+        utils.PutFriendsToFriendsTable(db, testlogged, friend)
 
         yes, err := template.New(ui.FriendRequestAccepted).Parse(ui.FriendRequestAccepted)
         if err != nil {
@@ -943,10 +897,8 @@ func main() {
     var msgInChan []string
 
     http.HandleFunc("/serverClicked/", func(w http.ResponseWriter, r *http.Request) {
+        // this is the server you clicked on:
         serverName := r.URL.Path[len("/serverClicked/"):]
-        // channelsInServer := utils.GetChannelsInServer(db, serverName)
-        // fmt.Println("channelsInServer.............................................", channelsInServer)
-
         sn = serverName
 
         serverIdFromServerName := utils.GetServerIdFromServerName(db, sn)
@@ -956,7 +908,6 @@ func main() {
         c := convertIntToString(lastServerId)
 
         for _, n := range serverIdFromServerName {
-
             if n != c {
                 fmt.Println("server id", n, "is not equal to, server id", c)
 
@@ -1087,25 +1038,14 @@ func main() {
         // this is the server name you clicked on
         fmt.Println("SN:", sn)
 
-        
-
-        // if channelName != sn {
-        //     fmt.Println(channelName, "is not in ", sn)
-        // } else {
-        //     fmt.Println(channelName, "is in ", sn)
-        // }
-        
         // gets a server id depending on what you clicked on for (sn above)
         serverIdFromServerName := utils.GetServerIdFromServerName(db, sn)
         fmt.Println("serverIdFromServerName:", serverIdFromServerName)
 
-
         lastServerId, _ := utils.GetServerId(db)
-
         c := convertIntToString(lastServerId)
 
         for _, n := range serverIdFromServerName {
-
             if n != c {
                 fmt.Println("server id", n, "is not equal to, server id", c)
 
@@ -1161,7 +1101,6 @@ func main() {
 
             // Prepare serversYouHaveBeenAddedTo template
             var serversYouHaveBeenAddedTo = `
-
             <style>
             body {
                 background-color: #a7b1c5;

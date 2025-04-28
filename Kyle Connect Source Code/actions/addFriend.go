@@ -168,8 +168,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         userData.Username = r.FormValue("username")
 		enteredUsername := userData.Username
 
-        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
-        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker!
+        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
 		username, er := utils.RetrieveUsernameFromDb(db, enteredUsername)
 		if err != nil {
@@ -215,8 +215,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             fmt.Println("error getting last user in logged-in table", e)
         }
         utils.CatchError(e)
-        fmt.Println("value variable = ", lastUser) // value is 5 because that is the last element in the db table
-
+        fmt.Println("value variable = ", lastUser)
+        
         lastUserFromIntToString := convertIntToString(lastUser)
 
         emailId, e := utils.RetrieveEmailFromId(db, lastUserFromIntToString)
@@ -226,9 +226,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         fmt.Println("emailId is:", emailId)
         
         loggedInUser := utils.RetrieveEmail(db, emailId)
-        // if e != nil {
-        //     fmt.Println("error finding name for", username)
-        // }
         fmt.Println("loggedInUser is:", loggedInUser)
 
         loggedInUserId, er := utils.GetUserId(db, loggedInUser)
@@ -258,7 +255,7 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
             for _, n := range totalFriends {
                 if n == username {
-                    fmt.Println("you cannot send a friend request because you are alraedy friends ")
+                    fmt.Println("you cannot send a friend request because you are already friends")
 
                     w.Header().Set("Content-Type", "text/html")
 

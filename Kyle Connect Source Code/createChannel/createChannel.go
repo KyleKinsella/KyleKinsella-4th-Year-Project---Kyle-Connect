@@ -11,7 +11,6 @@ import (
 )
 
 var channel = `
-
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -151,8 +150,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         channelData.ChannelName = r.FormValue("channel")
 		channelName := channelData.ChannelName
 
-        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
-        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
+        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
         utils.CatchError(err)
         defer db.Close()

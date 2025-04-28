@@ -244,12 +244,6 @@ var Removing = `
 	<h1> Select the friends you wish to remove from your server.</h1>
 `
 
-// var AdminOfServer = `
-// 	<h3>You created the above servers to add and delete friends.</h3>
-//     <a href="addFriendToServer/addFriendToServer.go">Add Friend To Server</a> <br>
-//     <a href="deleteFriendFromServer/deleteFriendFromServer.go">Delete Friend From Server</a> 
-// `
-
 var Admin = `
     <h3>You're the admin of the servers you created and can manage friends. <br> </h3>
 

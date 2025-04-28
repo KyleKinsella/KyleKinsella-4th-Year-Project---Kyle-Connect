@@ -34,8 +34,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
             return
         }
 
-        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
-        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
+        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
         utils.CatchError(err)
         defer db.Close()
@@ -45,8 +45,8 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
    		<style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
+        	background-color: #a7b1c5;
+			display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -83,18 +83,16 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         .section {
             flex: 1;
             padding: 15px;
-            background: #f8f9fa;
             border-radius: 10px;
             text-align: center;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .friends-section {
-            background: #e3eaf5;
         }
 
         .servers-section {
-            background: #f2e3f5;
+			background-color: blue;
         }
 
         .divider {
@@ -115,11 +113,11 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         }
 
         .section li {
-            background: #d0e1ff;
             margin: 6px 0;
             padding: 10px;
             border-radius: 6px;
             transition: background 0.3s ease, transform 0.2s ease;
+			background-color: #6082B6;
         }
 
         .section a {
@@ -165,7 +163,6 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
 		email, err := utils.RetrieveEmailFromId(db, con)
 		utils.CatchError(err)
-
 		user := utils.RetrieveEmail(db, email)
 
 		friends := utils.GetFriends(db, user)
@@ -203,15 +200,13 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		loggedInId, err := utils.GetLastUserLoggedIn(db)		
+		loggedInId, _ := utils.GetLastUserLoggedIn(db)		
 		converted := convertIntToString(loggedInId)
 	
-		emailFromId, err := utils.RetrieveEmailFromId(db, converted)
-		
+		emailFromId, _ := utils.RetrieveEmailFromId(db, converted)
 		name := utils.RetrieveEmail(db, emailFromId)
 
 		srs := utils.Servers(db, name)
-
 		if err := t.Execute(w, srs); err != nil {
 			http.Error(w, "Template execution error", http.StatusInternalServerError)
 			return
@@ -223,8 +218,8 @@ func main() {
     // Set up the route and handler for the form
     http.HandleFunc("/", formHandler)
 
-	db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
-    // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+	// db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect")
+    db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
     utils.CatchError(err)
     defer db.Close()
 
@@ -245,7 +240,7 @@ func main() {
 
 		<style>
 		body {
-			background-color: #f0f2f5;
+			background-color: #a7b1c5;
 			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 			margin: 0;
 			padding: 0;

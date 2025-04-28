@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -43,11 +42,6 @@ func RetrieveUsernameFromDb(db *sql.DB, username string) (string, error) {
 }
 
 func PutDataToDb(db *sql.DB, username, email, password string) error {
-
-	// if db == nil {
-	// 	fmt.Println("db error:", db)
-	// }
-
 	sql := "INSERT INTO communicators (username, email, password) VALUES (?, ?, ?)"
 	_, err := db.Query(sql, username, email, password)
 	CatchError(err)
@@ -329,10 +323,6 @@ func GetMessages(db *sql.DB, id int) []string {
 		}
 		
 		timestampStr := timestamp
-		// if parsedTime, err := time.Parse("2006-01-02 15:04:05", timestamp); err == nil {
-			// timestampStr = parsedTime.Format("Jan 02, 15:04")
-		// }
-
 		if parsedTime, err := time.Parse(time.RFC3339, timestampStr); err == nil {
 			timestampStr = parsedTime.Format("Jan 02, 15:04")
 		}
@@ -461,8 +451,6 @@ func NameOfPeopleInServer(db *sql.DB) []string {
 	if err = rows.Err(); err != nil {
 		fmt.Println("error iterating over rows:", err)
 	}
-	// return removeDuplicates(addedTo)
-
 	return peopleInServer
 }
 
@@ -544,7 +532,6 @@ func SelectSenderAndContent(db *sql.DB) []string {
 
 		senderOfMessage = strings.TrimSpace(senderOfMessage)
 
-		// formattedMessage := fmt.Sprintf("%s (%s):\n\n%s\n", senderOfMessage, timestampStr, ct)
 		formattedMessage := fmt.Sprintf("%s (%s):\n\n%s\n", senderOfMessage, timestampStr, ct)
 		content = append(content, formattedMessage)
 	}
@@ -552,7 +539,6 @@ func SelectSenderAndContent(db *sql.DB) []string {
 	if err = rows.Err(); err != nil {
 		fmt.Println("error iterating over rows:", err)
 	}
-	// return removeDuplicates(content)
 	return content
 }
 
@@ -576,7 +562,6 @@ func FriendsAddedToServer(db *sql.DB) []string {
 	if err = rows.Err(); err != nil {
 		fmt.Println("error iterating over rows:", err)
 	}
-	// return removeDuplicates(addedTo)
 	return addedToServer
 }
 
@@ -648,23 +633,10 @@ func GetMessagesInChannel(db *sql.DB, serverId int) []string {
 			fmt.Println("error scanning row:", err)
 		}
 
-		// timestampStr := timestamp
-		// if parsedTime, err := time.Parse("2006-01-02 15:04:05", timestampStr); err == nil {
-		// 	timestampStr = parsedTime.Format("Jan 02, 15:04")
-		// }
-
 		timestampStr := timestamp
 		if parsedTime, err := time.Parse(time.RFC3339, timestampStr); err == nil {
 			timestampStr = parsedTime.Format("Jan 02, 15:04")
 		}
-
-		// location, _ := time.LoadLocation("Europe/Dublin")
-		// parsedTime, err := time.Parse(time.RFC3339, timestampStr)
-		// if err == nil {
-		// 	parsedTime = parsedTime.In(location)
-		// 	timestampStr = parsedTime.Format("Jan 02, 15:04")
-		// }
-		
 
 		formattedMessage := fmt.Sprintf("%s (%s):\n\n%s\n", msgInChan, timestampStr, sender)
 		messagesInchannel = append(messagesInchannel, formattedMessage)
@@ -675,11 +647,6 @@ func GetMessagesInChannel(db *sql.DB, serverId int) []string {
 	}
 	return removeDuplicates(messagesInchannel)
 }
-
-
-
-/////////////////////////////////////////////////////////////////////////////////
-
 
 func GetServerIdFromServerName(db *sql.DB, serverName string) []string {
 	var messagesInchannel []string
@@ -701,7 +668,6 @@ func GetServerIdFromServerName(db *sql.DB, serverName string) []string {
 	if err = rows.Err(); err != nil {
 		fmt.Println("error iterating over rows:", err)
 	}
-	// return removeDuplicates(messagesInchannel)
 	return messagesInchannel
 }
 
@@ -725,7 +691,6 @@ func GetCommunicatorsUsernames(db *sql.DB) []string {
 	if err = rows.Err(); err != nil {
 		fmt.Println("error iterating over rows:", err)
 	}
-	// return removeDuplicates(messagesInchannel)
 	return usernames
 }
 
@@ -749,8 +714,6 @@ func GetLoggedInNameFromId(db *sql.DB, id int) []string {
 	if err = rows.Err(); err != nil {
 		fmt.Println("error iterating over rows:", err)
 	}
-	// return removeDuplicates(messagesInchannel)
-	// return usernames
 	return names
 }
 

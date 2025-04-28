@@ -123,7 +123,6 @@ var server = `
     </div>
 </body>
 </html>
-
 `
 
 type Server struct {
@@ -157,20 +156,18 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
         serverData.ServerName = r.FormValue("server")
 		serverName := serverData.ServerName
 		
-        db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
-        // db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
+        // db, err := sql.Open("mysql", "root@tcp(127.0.0.1)/kyleconnect") // this line of code works for localhost but not docker! MAKE SURE TO COMMENT THIS OUT WHEN WORKING WITH DOCKER!!!!!!!!!!!!!!!!
+        db, err := sql.Open("mysql", "root@tcp(host.docker.internal:3306)/kyleconnect?parseTime=true")
 
         utils.CatchError(err)
         defer db.Close()
 
 		loggedInId, err := utils.GetLastUserLoggedIn(db)
 		utils.CatchError(err)
-
 		converted := convertIntToString(loggedInId)
 
 		emailFromId, err := utils.RetrieveEmailFromId(db, converted)
 		utils.CatchError(err)
-
 		name := utils.RetrieveEmail(db, emailFromId)
 
         namesOfServers := utils.Servers(db, name)

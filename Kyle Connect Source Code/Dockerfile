@@ -1,11 +1,25 @@
 FROM golang:1.23
 
-WORKDIR /usr/src/app
+# Change working directory.
+WORKDIR /usr/src/app 
 
-COPY makeAccount ./
-COPY makeAccount/main ./
+# Copy files and directories:
+# COPY makeAccount ./
+# COPY makeAccount/main ./
 COPY . .
+# COPY createChannel ./
+COPY utils ./ 
+COPY login ./
+# COPY sendMessageToChannelInServer ./
+# COPY actions ./
+# COPY sendMessage ./
+# COPY createServer ./
+# COPY addFriendToServer ./
+# COPY deleteFriendFromServer ./
+# COPY welcomePage ./
 
-EXPOSE 8080
+# Describe which ports your application is listening on.
+EXPOSE 8081/tcp
 
-CMD ["go", "run", "signup.go"] 
+# Specify default commands.
+CMD ["go", "run", "login.go"] 
